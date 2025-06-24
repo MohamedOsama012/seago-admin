@@ -6,10 +6,16 @@ import 'package:sa7el/Cubit/malls/malls_states.dart';
 import 'package:sa7el/Cubit/Village/village_states.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
+import 'package:sa7el/Cubit/maintenance_providers/maintenance_state.dart';
+import 'package:sa7el/Model/maintenance_model.dart' show Providers;
 import 'package:sa7el/Model/malls_model.dart';
 import 'package:sa7el/Model/village_model.dart';
 import 'package:sa7el/Model/service_provider_model.dart';
+import 'package:sa7el/views/Home/Widgets/add_dialog_widget.dart';
 import 'package:sa7el/views/Home/Widgets/expandable_container_widget.dart';
+import 'package:sa7el/Cubit/maintenance_providers/maintenance_cubit.dart';
+import 'package:sa7el/Cubit/malls/malls_cubit.dart';
+import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 
 class EntityListScreen<C extends EntityCubit<T, S>, T, S>
     extends StatefulWidget {
@@ -35,7 +41,12 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
   bool _isLoadingState(S state) {
     return state is MallsGetDataLoadingState ||
         state is VillaLoadingState ||
-        state is ServiceProviderGetDataLoadingState;
+        state is ServiceProviderGetDataLoadingState ||
+        state is MaintenanceLoadingState ||
+        state is MallsAddLoadingState ||
+        state is VillageAddLoadingState ||
+        state is ServiceProviderAddLoadingState ||
+        state is MaintenanceAddLoadingState;
   }
 
   bool _isSuccessState(S state) {
@@ -43,23 +54,40 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
         state is VillageSuccessState ||
         state is VillageFilteredState ||
         state is VillageSearchState ||
-        state is ServiceProviderGetDataSuccessState;
+        state is ServiceProviderGetDataSuccessState ||
+        state is MaintenanceSuccessState ||
+        state is MaintenanceFilteredState ||
+        state is MaintenanceSearchState ||
+        state is MallsAddSuccessState ||
+        state is VillageAddSuccessState ||
+        state is ServiceProviderAddSuccessState ||
+        state is MaintenanceAddSuccessState;
   }
 
   bool _isErrorState(S state) {
     return state is MallsGetDataErrorState ||
         state is VillageErrorState ||
-        state is ServiceProviderGetDataErrorState;
+        state is ServiceProviderGetDataErrorState ||
+        state is MaintenanceErrorState ||
+        state is MallsAddFailedState ||
+        state is VillageAddErrorState ||
+        state is ServiceProviderAddFailedState ||
+        state is MaintenanceAddErrorState;
   }
 
   String _getErrorMessage(S state) {
-    if (state is MallsGetDataErrorState) {
-      return state.error;
-    } else if (state is VillageErrorState) {
-      return state.error;
-    } else if (state is ServiceProviderGetDataErrorState) {
+    if (state is MallsGetDataErrorState) return state.error;
+    if (state is VillageErrorState) return state.error;
+    if (state is ServiceProviderGetDataErrorState)
       return 'Failed to load service providers';
-    }
+    if (state is MaintenanceErrorState) return state.error;
+
+    // Add Failed States
+    if (state is MallsAddFailedState) return state.errMessage;
+    if (state is VillageAddErrorState) return state.error;
+    if (state is ServiceProviderAddFailedState) return state.error;
+    if (state is MaintenanceAddErrorState) return state.error;
+
     return 'Unknown error occurred';
   }
 
@@ -85,9 +113,22 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
           backgroundColor: Colors.white,
           title: Text(widget.title),
           actions: [
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () => context.read<C>().getData(),
+            Padding(
+              padding: EdgeInsetsDirectional.only(
+                end: MediaQuery.of(context).size.width * 0.01,
+              ),
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: WegoColors.cardColor,
+                child: IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.add,
+                    color: WegoColors.mainColor,
+                    size: 20,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -100,6 +141,26 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                   backgroundColor: Colors.red,
                 ),
               );
+            } else if (state is MallsAddSuccessState) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.successMessage),
+                backgroundColor: Colors.green,
+              ));
+            } else if (state is VillageAddSuccessState) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Village added successfully."),
+                backgroundColor: Colors.green,
+              ));
+            } else if (state is ServiceProviderAddSuccessState) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.green,
+              ));
+            } else if (state is MaintenanceAddSuccessState) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Maintenance Provider added successfully."),
+                backgroundColor: Colors.green,
+              ));
             }
             if (_isSuccessState(state)) {
               _expandedCards.clear();
@@ -153,7 +214,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                             isExpanded: isExpanded,
                             itemTypeName: 'Mall',
                             onEdit: (mallItem) {
-                              showMallEditDialog(context, item, cubit);
+                              showEditDialog(context, item, cubit);
                             },
                             onDelete: (mallItem) async {
                               cubit.deleteData(item.id);
@@ -176,8 +237,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                             isExpanded: isExpanded,
                             itemTypeName: 'Village',
                             onEdit: (villageItem) {
-                              showEditDialog(
-                                  context, villageItem, 'Village', cubit);
+                              showEditDialog(context, item, cubit);
                             },
                             onDelete: (villageItem) async {
                               cubit.deleteData(item.id!);
@@ -200,8 +260,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                             isExpanded: isExpanded,
                             itemTypeName: 'Service Provider',
                             onEdit: (serviceProviderItem) {
-                              showEditDialog(context, serviceProviderItem,
-                                  'Service Provider', cubit);
+                              showEditDialog(context, item, cubit);
                             },
                             onDelete: (serviceProviderItem) async {
                               cubit.deleteData(item.id);
@@ -209,45 +268,79 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                           ),
                         ),
                       );
-                    } else {
-                      return ListTile(
-                        title: Text(item.toString()),
-                        subtitle: Text('Unsupported item type'),
+                    } else if (item is Providers) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: GestureDetector(
+                          onTap: () => _toggleCardExpansion(index),
+                          child: ExpandableCard<MaintenanceProviderItem>(
+                            item: MaintenanceProviderItem(item),
+                            index: index,
+                            isGrid: false,
+                            isTablet: MediaQuery.of(context).size.width > 600,
+                            isDesktop: MediaQuery.of(context).size.width > 1024,
+                            isExpanded: isExpanded,
+                            itemTypeName: 'Maintenance Provider',
+                            onEdit: (serviceProviderItem) {
+                              showEditDialog(context, item, cubit);
+                            },
+                            onDelete: (serviceProviderItem) async {
+                              cubit.deleteData(item.id!);
+                            },
+                          ),
+                        ),
                       );
                     }
+                    return null;
                   },
                 ),
               );
             }
-
             return Center(child: Text('No data'));
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.read<C>().getData(),
-          child: Icon(Icons.refresh),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            final cubit = context.read<C>();
+            dynamic templateItem;
+
+            if (cubit is VillageCubit) {
+              templateItem = Villages();
+            } else if (cubit is MallsCubit) {
+              templateItem = MallModel.empty();
+            } else if (cubit is ServiceProviderCubit) {
+              templateItem = ServiceProviderModel.empty();
+            } else if (cubit is MaintenanceCubit) {
+              templateItem = Providers();
+            } else {
+              print(
+                  'Error: Could not create a template for unhandled cubit type ${cubit.runtimeType}');
+              // Optionally, show an error to the user
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Cannot add item: Unhandled entity type.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+            showAddDialog(context, templateItem, cubit);
+          },
+          backgroundColor: WegoColors.mainColor,
+          icon: const Icon(Icons.add, color: Colors.white, size: 20),
+          label: const Text(
+            'Add',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
-
-  // Future<bool?> _showDeleteDialog(BuildContext context, T item) {
-  //   return showDialog<bool>(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: Text('Delete Item'),
-  //       content: Text('Are you sure you want to delete this item?'),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(false),
-  //           child: Text('Cancel'),
-  //         ),
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(true),
-  //           child: Text('Delete', style: TextStyle(color: Colors.red)),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

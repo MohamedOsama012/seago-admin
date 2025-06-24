@@ -1,11 +1,13 @@
 import 'dart:developer';
 
+import 'package:dio/dio.dart';
 import 'package:sa7el/Cubit/entity/entity_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
 import 'package:sa7el/Model/service_provider_model.dart';
 import 'package:sa7el/controller/cashe/cashe_Helper.dart';
 import 'package:sa7el/controller/dio/dio_helper.dart';
 import 'package:sa7el/controller/dio/end_points.dart';
+import 'package:sa7el/views/Home/Widgets/add_dialog_widget.dart';
 
 class ServiceProviderCubit
     extends EntityCubit<ServiceProviderModel, ServiceProviderStates> {
@@ -17,9 +19,39 @@ class ServiceProviderCubit
   List<ServiceProviderModel> items = [];
 
   @override
-  Future<void> addData(ServiceProviderModel item) {
-    // TODO: implement addData
-    throw UnimplementedError();
+  Future<void> addData(dynamic addModel) async {
+    if (addModel is! ServiceProviderAddModel) {
+      emit(ServiceProviderAddFailedState(
+          "Invalid model type for adding a service provider."));
+      return;
+    }
+
+    emit(ServiceProviderAddLoadingState());
+
+    try {
+      final apiData = addModel.toApiData();
+
+      final response = await DioHelper.postData(
+        url: WegoEndPoints.addProviderEndPoint,
+        data: apiData,
+        token: token,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        emit(ServiceProviderAddSuccessState(
+            "Service Provider added successfully."));
+        await getData(); // Refresh list
+      } else {
+        emit(ServiceProviderAddFailedState(
+            "Failed to add Service Provider: ${response.statusMessage}"));
+      }
+    } catch (error) {
+      log('Add Service Provider Error: ${error.toString()}');
+      if (error is DioException) {
+        log('Dio Error Response: ${error.response?.data}');
+      }
+      emit(ServiceProviderAddFailedState(error.toString()));
+    }
   }
 
   @override
@@ -42,9 +74,40 @@ class ServiceProviderCubit
   }
 
   @override
-  Future<void> editData(ServiceProviderModel item) {
-    // TODO: implement editData
-    throw UnimplementedError();
+  Future<void> editData(dynamic editModel) async {
+    emit(ServiceProviderGetDataLoadingState());
+
+    try {
+      // Get all the data from the complete model (including base64 image if present)
+      final allData = editModel.toApiData();
+
+      log('Updating service provider ${editModel.serviceProviderId} with complete data: ${allData.keys.toList()}');
+
+      final response = await DioHelper.postData(
+        url:
+            "${WegoEndPoints.updateServiceProviderEndPoint}/${editModel.serviceProviderId}",
+        data: allData,
+        token: token,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        emit(ServiceProviderEditSuccessState(
+            "Service Provider Successfully Updated"));
+        // Refresh the data after successful update
+        await getData();
+      } else {
+        emit(ServiceProviderEditFailedState(
+            "Failed to update service provider"));
+      }
+    } catch (error) {
+      if (error is DioException && error.response != null) {
+        print(
+            'Edit Service Provider Error Response Data: ${error.response?.data}');
+      } else {
+        print('Edit Service Provider Error: ${error.toString()}');
+      }
+      emit(ServiceProviderEditFailedState(error.toString()));
+    }
   }
 
   @override
@@ -60,7 +123,6 @@ class ServiceProviderCubit
             .map(
                 (e) => ServiceProviderModel.fromJson(e as Map<String, dynamic>))
             .toList();
-        log(items.toString());
         emit(ServiceProviderGetDataSuccessState());
       }
     } catch (e) {

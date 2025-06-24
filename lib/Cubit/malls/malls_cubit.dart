@@ -10,6 +10,7 @@ import 'package:sa7el/Model/malls_model.dart';
 import 'package:sa7el/controller/cashe/cashe_Helper.dart';
 import 'package:sa7el/controller/dio/dio_helper.dart';
 import 'package:sa7el/controller/dio/end_points.dart';
+import 'package:sa7el/views/Home/Widgets/add_dialog_widget.dart';
 
 class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   MallsCubit() : super(MallsInitialState());
@@ -547,8 +548,35 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   }
 
   @override
-  Future<void> addData(MallModel item) {
-    throw UnimplementedError();
+  Future<void> addData(dynamic addModel) async {
+    if (addModel is! MallAddModel) {
+      emit(MallsAddFailedState("Invalid model type for adding a mall."));
+      return;
+    }
+
+    emit(MallsAddLoadingState());
+
+    try {
+      // Get the data map from the model
+      final apiData = addModel.toApiData();
+
+      // Send the request to the add endpoint
+      final response = await DioHelper.postData(
+        url: WegoEndPoints.addMallsEndPoint,
+        data: apiData,
+        token: token,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await getData(); // Refresh the list after adding
+        emit(MallsAddSuccessState("Mall added successfully."));
+      } else {
+        final errorMessage = _extractErrorMessage(response.data);
+        emit(MallsAddFailedState(errorMessage));
+      }
+    } catch (error) {
+      emit(MallsAddFailedState(_handleError(error)));
+    }
   }
 
   // @override
@@ -622,7 +650,15 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
       // Get all the data from the complete model (including base64 image if present)
       final allData = editModel.toApiData();
 
-      log('Updating mall ${editModel.mallId} with complete data: ${allData.keys.toList()}');
+      print('DEBUG: CUBIT - API data being sent: ${allData.keys.toList()}');
+      if (allData.containsKey('image')) {
+        print(
+            'DEBUG: CUBIT - Image data included, length: ${allData['image']?.length ?? 0}');
+      } else {
+        print('DEBUG: CUBIT - No image data in API payload');
+      }
+      print(
+          'DEBUG: CUBIT - Full data (excluding image): ${Map.from(allData)..remove('image')}');
 
       final response = await DioHelper.postData(
         url: "${WegoEndPoints.updateMallsEndPoint}/${editModel.mallId}",
@@ -638,57 +674,8 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
         emit(MallsEditFailedState("Failed to update mall"));
       }
     } catch (error) {
-      print('Edit Mall Error: ${error.toString()}');
-      emit(MallsEditFailedState(_handleError(error)));
-    }
-  }
-
-  Future<void> editMallsDataJson({
-    required int mallId,
-    required String name,
-    required String openFrom,
-    required String openTo,
-    required String description,
-    String? arName,
-    String? arDescription,
-    required int zoneId,
-    required int status,
-  }) async {
-    emit(MallsEditLoadingState());
-
-    try {
-      Map<String, dynamic> data = {
-        'name': name.trim(),
-        'open_from': openFrom.trim(),
-        'open_to': openTo.trim(),
-        'description': description.trim(),
-        'zone_id': zoneId,
-        'status': status,
-      };
-
-      if (arName != null && arName.isNotEmpty) {
-        data['ar_name'] = arName.trim();
-      }
-
-      if (arDescription != null && arDescription.isNotEmpty) {
-        data['ar_description'] = arDescription.trim();
-      }
-
-      final response = await DioHelper.postData(
-        url: "${WegoEndPoints.updateMallsEndPoint}/$mallId",
-        data: data,
-        token: token,
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        emit(MallsEditSuccessState("Mall Successfully Updated"));
-        await getData();
-      } else {
-        emit(MallsEditFailedState("Failed to update mall"));
-      }
-    } catch (error) {
-      print('Edit Mall Error: ${error.toString()}');
-      emit(MallsEditFailedState(_handleError(error)));
+      log(error.toString());
+      emit(MallsEditFailedState('An unexpected error occurred: $error'));
     }
   }
 }

@@ -21,3 +21,27 @@ class ServiceProviderDeleteFailedState extends ServiceProviderStates {
 
   ServiceProviderDeleteFailedState(this.error);
 }
+
+class ServiceProviderEditSuccessState extends ServiceProviderStates {
+  final String message;
+
+  ServiceProviderEditSuccessState(this.message);
+}
+
+class ServiceProviderEditFailedState extends ServiceProviderStates {
+  final String error;
+
+  ServiceProviderEditFailedState(this.error);
+}
+
+class ServiceProviderAddLoadingState extends ServiceProviderStates {}
+
+class ServiceProviderAddSuccessState extends ServiceProviderStates {
+  final String message;
+  ServiceProviderAddSuccessState(this.message);
+}
+
+class ServiceProviderAddFailedState extends ServiceProviderStates {
+  final String error;
+  ServiceProviderAddFailedState(this.error);
+}

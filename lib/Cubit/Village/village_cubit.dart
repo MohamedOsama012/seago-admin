@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sa7el/Cubit/Village/village_states.dart';
 import 'package:sa7el/Cubit/entity/entity_cubit.dart';
@@ -5,6 +6,9 @@ import 'package:sa7el/Model/village_model.dart';
 import 'package:sa7el/controller/cashe/cashe_Helper.dart';
 import 'package:sa7el/controller/dio/dio_helper.dart';
 import 'package:sa7el/controller/dio/end_points.dart';
+import 'dart:developer';
+
+import 'package:sa7el/views/Home/Widgets/add_dialog_widget.dart';
 
 class VillageCubit extends EntityCubit<Villages, VillageStates> {
   VillageCubit() : super(VillaLoadingState());
@@ -133,7 +137,7 @@ class VillageCubit extends EntityCubit<Villages, VillageStates> {
       emit(VillageEditSuccessState());
       getData();
     }).catchError((error) {
-      print('Edit Village Error: ${error.toString()}');
+      print('Edit Village Error: ${error.response?.data.toString()}');
       emit(VillageEditErrorState(error.toString()));
     });
   }
@@ -156,54 +160,70 @@ class VillageCubit extends EntityCubit<Villages, VillageStates> {
   }
 
   ///add new village
-  void addVillage({
-    required String name,
-    required String location,
-    required String description,
-    String? arName,
-    String? arDescription,
-    required int zoneId,
-    required int status,
-    String? imagePath,
-  }) {
-    emit(VillageAddLoadingState());
-
-    Map<String, dynamic> data = {
-      'name': name,
-      'location': location,
-      'description': description,
-      'ar_name': arName,
-      'ar_description': arDescription,
-      'zone_id': zoneId,
-      'status': status,
-    };
-
-    if (imagePath != null && imagePath.isNotEmpty) {
-      data['image'] = imagePath;
+  @override
+  Future<void> addData(dynamic addModel) async {
+    if (addModel is! VillageAddModel) {
+      emit(VillageAddErrorState("Invalid model type for adding a village."));
+      return;
     }
 
-    DioHelper.postData(
-      url: WegoEndPoints.addVillagesEndPoint,
-      data: data,
-      token: token,
-    ).then((value) {
-      emit(VillageAddSuccessState());
-      getData(); // Refresh the villages list after successful addition
-    }).catchError((error) {
-      print('Add Village Error: ${error.toString()}');
+    emit(VillageAddLoadingState());
+
+    try {
+      final apiData = addModel.toApiData();
+
+      final response = await DioHelper.postData(
+        url: WegoEndPoints.addVillagesEndPoint,
+        data: apiData,
+        token: token,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        emit(VillageAddSuccessState());
+        await getData(); // Refresh list
+      } else {
+        emit(VillageAddErrorState(
+            "Failed to add village: ${response.statusMessage}"));
+      }
+    } catch (error) {
+      log('Add Village Error: ${error.toString()}');
+      if (error is DioException) {
+        log('Dio Error Response: ${error.response?.data}');
+      }
       emit(VillageAddErrorState(error.toString()));
-    });
+    }
   }
 
   @override
-  Future<void> addData(Villages item) {
-    // TODO: implement addData
-    throw UnimplementedError();
-  }
+  Future<void> editData(dynamic editModel) async {
+    emit(VillageEditLoadingState());
 
-  @override
-  Future<void> editData(Villages item) {
-    // TODO: implement editData
-    throw UnimplementedError();
+    try {
+      // Get all the data from the complete model (including base64 image if present)
+      final allData = editModel.toApiData();
+
+      log('Updating village ${editModel.villageId} with complete data: ${allData.keys.toList()}');
+
+      final response = await DioHelper.postData(
+        url: "${WegoEndPoints.UpdateVillagesEndPoint}/${editModel.villageId}",
+        data: allData,
+        token: token,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        emit(VillageEditSuccessState());
+        // Refresh the data after successful update
+        await getData();
+      } else {
+        emit(VillageEditErrorState("Failed to update village"));
+      }
+    } catch (error) {
+      if (error is DioException && error.response != null) {
+        print('Edit Village Error Response Data: ${error.response?.data}');
+      } else {
+        print('Edit Village Error: ${error.toString()}');
+      }
+      emit(VillageEditErrorState(error.toString()));
+    }
   }
 }

@@ -1,8 +1,9 @@
 class MaintenanceModel {
   MaintenanceModel({
-      this.providers, 
-      this.maintenanceTypes, 
-      this.villages,});
+    this.providers,
+    this.maintenanceTypes,
+    this.villages,
+  });
 
   MaintenanceModel.fromJson(dynamic json) {
     if (json['providers'] != null) {
@@ -34,36 +35,37 @@ class MaintenanceModel {
       map['providers'] = providers?.map((v) => v.toJson()).toList();
     }
     if (maintenanceTypes != null) {
-      map['maintenance_types'] = maintenanceTypes?.map((v) => v.toJson()).toList();
+      map['maintenance_types'] =
+          maintenanceTypes?.map((v) => v.toJson()).toList();
     }
     if (villages != null) {
       map['villages'] = villages?.map((v) => v.toJson()).toList();
     }
     return map;
   }
-
 }
 
 class Villages {
   Villages({
-      this.id, 
-      this.name, 
-      this.description, 
-      this.location, 
-      this.image, 
-      this.from, 
-      this.to, 
-      this.packageId, 
-      this.status, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.zoneId, 
-      this.coverImage, 
-      this.imageLink, 
-      this.arName, 
-      this.arDescription, 
-      this.coverImageLink, 
-      this.translations,});
+    this.id,
+    this.name,
+    this.description,
+    this.location,
+    this.image,
+    this.from,
+    this.to,
+    this.packageId,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+    this.zoneId,
+    this.coverImage,
+    this.imageLink,
+    this.arName,
+    this.arDescription,
+    this.coverImageLink,
+    this.translations,
+  });
 
   Villages.fromJson(dynamic json) {
     id = json['id'];
@@ -90,7 +92,7 @@ class Villages {
       });
     }
   }
-  num? id;
+  int? id;
   String? name;
   String? description;
   String? location;
@@ -98,10 +100,10 @@ class Villages {
   String? from;
   String? to;
   dynamic packageId;
-  num? status;
+  int? status;
   String? createdAt;
   String? updatedAt;
-  num? zoneId;
+  int? zoneId;
   String? coverImage;
   String? imageLink;
   String? arName;
@@ -133,19 +135,19 @@ class Villages {
     }
     return map;
   }
-
 }
 
 class Translations {
   Translations({
-      this.id, 
-      this.locale, 
-      this.translatableType, 
-      this.translatableId, 
-      this.key, 
-      this.value, 
-      this.createdAt, 
-      this.updatedAt,});
+    this.id,
+    this.locale,
+    this.translatableType,
+    this.translatableId,
+    this.key,
+    this.value,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   Translations.fromJson(dynamic json) {
     id = json['id'];
@@ -157,10 +159,10 @@ class Translations {
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
   }
-  num? id;
+  int? id;
   String? locale;
   String? translatableType;
-  num? translatableId;
+  int? translatableId;
   String? key;
   String? value;
   String? createdAt;
@@ -178,20 +180,20 @@ class Translations {
     map['updated_at'] = updatedAt;
     return map;
   }
-
 }
 
 class MaintenanceTypes {
   MaintenanceTypes({
-      this.id, 
-      this.name, 
-      this.image, 
-      this.status, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.imageLink, 
-      this.arName, 
-      this.translations,});
+    this.id,
+    this.name,
+    this.image,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+    this.imageLink,
+    this.arName,
+    this.translations,
+  });
 
   MaintenanceTypes.fromJson(dynamic json) {
     id = json['id'];
@@ -209,10 +211,10 @@ class MaintenanceTypes {
       });
     }
   }
-  num? id;
+  int? id;
   String? name;
   String? image;
-  num? status;
+  int? status;
   String? createdAt;
   String? updatedAt;
   String? imageLink;
@@ -234,36 +236,35 @@ class MaintenanceTypes {
     }
     return map;
   }
-
 }
-
 
 class Providers {
   Providers({
-      this.id, 
-      this.maintenanceTypeId, 
-      this.name, 
-      this.phone, 
-      this.image, 
-      this.location, 
-      this.description, 
-      this.from, 
-      this.to, 
-      this.packageId, 
-      this.status, 
-      this.villageId, 
-      this.openFrom, 
-      this.openTo, 
-      this.coverImage, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.imageLink, 
-      this.arName, 
-      this.arDescription, 
-      this.coverImageLink, 
-      this.translations, 
-      this.maintenance, 
-      this.package,});
+    this.id,
+    this.maintenanceTypeId,
+    this.name,
+    this.phone,
+    this.image,
+    this.location,
+    this.description,
+    this.from,
+    this.to,
+    this.packageId,
+    this.status,
+    this.villageId,
+    this.openFrom,
+    this.openTo,
+    this.coverImage,
+    this.createdAt,
+    this.updatedAt,
+    this.imageLink,
+    this.arName,
+    this.arDescription,
+    this.coverImageLink,
+    this.translations,
+    this.maintenance,
+    this.package,
+  });
 
   Providers.fromJson(dynamic json) {
     id = json['id'];
@@ -293,11 +294,14 @@ class Providers {
         translations?.add(Translations.fromJson(v));
       });
     }
-    maintenance = json['maintenance'] != null ? Maintenance.fromJson(json['maintenance']) : null;
-    package = json['package'] != null ? Package.fromJson(json['package']) : null;
+    maintenance = json['maintenance'] != null
+        ? Maintenance.fromJson(json['maintenance'])
+        : null;
+    package =
+        json['package'] != null ? Package.fromJson(json['package']) : null;
   }
-  num? id;
-  num? maintenanceTypeId;
+  int? id;
+  int? maintenanceTypeId;
   String? name;
   String? phone;
   String? image;
@@ -305,9 +309,9 @@ class Providers {
   String? description;
   String? from;
   String? to;
-  num? packageId;
-  num? status;
-  dynamic villageId;
+  int? packageId;
+  int? status;
+  int? villageId;
   String? openFrom;
   String? openTo;
   dynamic coverImage;
@@ -355,29 +359,29 @@ class Providers {
     }
     return map;
   }
-
 }
 
 class Package {
   Package({
-      this.id, 
-      this.serviceId, 
-      this.name, 
-      this.description, 
-      this.price, 
-      this.feez, 
-      this.discount, 
-      this.beachPoolModule, 
-      this.maintenanceModule, 
-      this.securityNum, 
-      this.adminNum, 
-      this.type, 
-      this.status, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.arName, 
-      this.arDescription, 
-      this.translations,});
+    this.id,
+    this.serviceId,
+    this.name,
+    this.description,
+    this.price,
+    this.feez,
+    this.discount,
+    this.beachPoolModule,
+    this.maintenanceModule,
+    this.securityNum,
+    this.adminNum,
+    this.type,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+    this.arName,
+    this.arDescription,
+    this.translations,
+  });
 
   Package.fromJson(dynamic json) {
     id = json['id'];
@@ -404,19 +408,19 @@ class Package {
       });
     }
   }
-  num? id;
+  int? id;
   dynamic serviceId;
   String? name;
   String? description;
-  num? price;
-  num? feez;
-  num? discount;
-  num? beachPoolModule;
-  num? maintenanceModule;
-  num? securityNum;
-  num? adminNum;
+  int? price;
+  int? feez;
+  int? discount;
+  int? beachPoolModule;
+  int? maintenanceModule;
+  int? securityNum;
+  int? adminNum;
   String? type;
-  num? status;
+  int? status;
   String? createdAt;
   String? updatedAt;
   dynamic arName;
@@ -447,21 +451,20 @@ class Package {
     }
     return map;
   }
-
 }
-
 
 class Maintenance {
   Maintenance({
-      this.id, 
-      this.name, 
-      this.image, 
-      this.status, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.imageLink, 
-      this.arName, 
-      this.translations,});
+    this.id,
+    this.name,
+    this.image,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+    this.imageLink,
+    this.arName,
+    this.translations,
+  });
 
   Maintenance.fromJson(dynamic json) {
     id = json['id'];
@@ -479,10 +482,10 @@ class Maintenance {
       });
     }
   }
-  num? id;
+  int? id;
   String? name;
   String? image;
-  num? status;
+  int? status;
   String? createdAt;
   String? updatedAt;
   String? imageLink;
@@ -504,5 +507,4 @@ class Maintenance {
     }
     return map;
   }
-
 }

@@ -3,10 +3,12 @@ import 'package:sa7el/Core/colors.dart';
 import 'package:sa7el/Core/images_url.dart';
 import 'package:sa7el/Core/text_styles.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
+import 'package:sa7el/Cubit/maintenance_providers/maintenance_cubit.dart';
 import 'package:sa7el/Cubit/malls/malls_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 import 'package:sa7el/views/Home/admin_services/maintenance_providers/maintenance_provider_screen.dart';
 import 'package:sa7el/views/Home/admin_services/services_provider_screen.dart';
+import 'package:sa7el/views/Home/admin_services/village/village_page.dart';
 import 'package:sa7el/views/Home/screens/entity_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -133,7 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => _navigateTo(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MaintenanceProviderPage(),
+                          builder: (context) => EntityListScreen(
+                            cubit: MaintenanceCubit(),
+                            title: 'Maintenance Providers',
+                          ),
                         ),
                       ),
                     ),

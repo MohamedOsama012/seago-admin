@@ -196,6 +196,41 @@ class ServiceProviderModel {
         'Created At': createdAt,
         'Updated At': updatedAt,
       };
+
+  // Add an empty constructor for creating placeholder instances
+  ServiceProviderModel.empty()
+      : id = 0,
+        serviceId = 0,
+        name = '',
+        phone = '',
+        image = null,
+        location = null,
+        description = '',
+        from = null,
+        to = null,
+        packageId = null,
+        status = 1, // Default to active
+        createdAt = '',
+        updatedAt = '',
+        villageId = null,
+        openFrom = null,
+        openTo = null,
+        coverImage = null,
+        zoneId = null,
+        mallId = null,
+        adminId = null,
+        locationMap = null,
+        imageLink = null,
+        arName = null,
+        arDescription = null,
+        rate = null,
+        coverImageLink = null,
+        translations = [],
+        service = null,
+        package = null,
+        zone = null,
+        superAdmin = null,
+        rateItems = [];
 }
 
 class Translation {

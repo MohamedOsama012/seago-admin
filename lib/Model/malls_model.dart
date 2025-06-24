@@ -111,6 +111,20 @@ class Zone {
         'ar_description': arDescription,
         'translations': translations.map((e) => e.toJson()).toList(),
       };
+
+  // Create an empty Zone for template/placeholder purposes
+  Zone.empty()
+      : id = 0,
+        name = '',
+        image = '',
+        description = '',
+        status = 0,
+        createdAt = DateTime.now(),
+        updatedAt = DateTime.now(),
+        imageLink = '',
+        arName = '',
+        arDescription = '',
+        translations = [];
 }
 
 class MallModel {
@@ -212,6 +226,26 @@ class MallModel {
         'translations': translations.map((e) => e.toJson()).toList(),
         'zone': zone.toJson(),
       };
+
+  // Create an empty MallModel for template/placeholder purposes
+  MallModel.empty()
+      : id = 0,
+        name = '',
+        description = '',
+        openFrom = '',
+        openTo = '',
+        image = null,
+        coverImage = null,
+        zoneId = 0,
+        status = 1, // Default to active
+        createdAt = DateTime.now(),
+        updatedAt = DateTime.now(),
+        imageLink = '',
+        coverImageLink = '',
+        arName = '',
+        arDescription = '',
+        translations = [],
+        zone = Zone.empty();
 }
 
 class MallsAndZonesResponse {
