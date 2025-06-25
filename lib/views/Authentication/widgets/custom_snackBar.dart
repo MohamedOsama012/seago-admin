@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:sa7el/Core/toast_helper.dart';
 
-ScaffoldFeatureController<SnackBar, SnackBarClosedReason> customSnackBar({
+void customSnackBar({
   required BuildContext context,
   required String message,
+  bool isError = true,
 }) {
-  return ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message, style: TextStyle(color: Colors.white)),
-      backgroundColor: Colors.red,
-      duration: Duration(seconds: 3),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ),
-  );
+  showCustomToast(context, message, isError: isError);
 }

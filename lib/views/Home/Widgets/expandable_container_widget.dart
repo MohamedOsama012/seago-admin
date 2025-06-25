@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:sa7el/Core/colors.dart';
+import 'package:sa7el/Core/toast_helper.dart';
 import 'package:sa7el/Model/village_model.dart';
 import 'package:sa7el/Model/malls_model.dart';
 import 'package:sa7el/Model/service_provider_model.dart';
@@ -11,6 +12,11 @@ import 'package:sa7el/Model/maintenance_provider_model.dart';
 import 'package:sa7el/Model/maintenance_model.dart' show Providers;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:sa7el/Cubit/Village/village_cubit.dart';
+import 'package:sa7el/Cubit/Village/village_states.dart';
+import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
+import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Helper function for image picking
 Future<String?> _pickImage() async {
@@ -98,7 +104,6 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
   final Function(T)? onEdit;
   final Function(T)? onDelete;
   final String itemTypeName; // e.g., "Village", "Mall", etc.
-
   const ExpandableCard({
     super.key,
     required this.item,
@@ -227,12 +232,45 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context, double fontSize) {
+    // Get screen dimensions for responsive design
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 1024;
+
+    // Responsive dimensions
+    final buttonHeight = isDesktop
+        ? MediaQuery.of(context).size.height * 0.06
+        : isTablet
+            ? MediaQuery.of(context).size.height * 0.055
+            : MediaQuery.of(context).size.height * 0.05;
+
+    final buttonFontSize = isDesktop
+        ? 16.0
+        : isTablet
+            ? 14.0
+            : fontSize;
+    final horizontalPadding = isDesktop
+        ? 20.0
+        : isTablet
+            ? 16.0
+            : 12.0;
+    final verticalPadding = isDesktop
+        ? 18.0
+        : isTablet
+            ? 16.0
+            : 14.0;
+    final buttonSpacing = isDesktop
+        ? 20.0
+        : isTablet
+            ? 16.0
+            : 12.0;
+
     return Row(
       children: [
         if (onEdit != null)
           Expanded(
             child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.05,
+              height: buttonHeight,
               child: ElevatedButton(
                 onPressed: () {
                   print('DEBUG: Edit button pressed for ${item.name}');
@@ -248,25 +286,28 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
                   elevation: 0,
                 ),
                 child: Text(
                   'Edit',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: fontSize,
+                    fontSize: buttonFontSize,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ),
           ),
-        if (onEdit != null && onDelete != null) const SizedBox(width: 16),
+        if (onEdit != null && onDelete != null) SizedBox(width: buttonSpacing),
         if (onDelete != null)
           Expanded(
             child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.05,
+              height: buttonHeight,
               child: OutlinedButton(
                 onPressed: () => _showDeleteConfirmDialog(context),
                 style: OutlinedButton.styleFrom(
@@ -276,14 +317,17 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
                   backgroundColor: WegoColors.cardColor,
                 ),
                 child: Text(
                   'Delete',
                   style: TextStyle(
                     color: WegoColors.mainColor,
-                    fontSize: fontSize,
+                    fontSize: buttonFontSize,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -295,20 +339,75 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
   }
 
   void _showDeleteConfirmDialog(BuildContext context) {
+    // Get screen dimensions for responsive design
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 1024;
+
+    // Responsive font sizes
+    final titleFontSize = isDesktop
+        ? 20.0
+        : isTablet
+            ? 18.0
+            : 16.0;
+    final bodyFontSize = isDesktop
+        ? 16.0
+        : isTablet
+            ? 14.0
+            : 14.0;
+    final subtitleFontSize = isDesktop
+        ? 14.0
+        : isTablet
+            ? 12.0
+            : 12.0;
+    final buttonFontSize = isDesktop
+        ? 14.0
+        : isTablet
+            ? 12.0
+            : 12.0;
+
+    // Responsive spacing and dimensions
+    final iconSize = isDesktop
+        ? 32.0
+        : isTablet
+            ? 28.0
+            : 24.0;
+    final horizontalPadding = isDesktop
+        ? 24.0
+        : isTablet
+            ? 20.0
+            : 16.0;
+    final verticalSpacing = isDesktop
+        ? 16.0
+        : isTablet
+            ? 12.0
+            : 8.0;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          contentPadding: EdgeInsets.all(horizontalPadding),
           title: Row(
             children: [
-              Icon(Icons.warning, color: Colors.red, size: 28),
+              Icon(
+                Icons.warning,
+                color: Colors.red,
+                size: iconSize,
+              ),
               SizedBox(width: 12),
-              Text(
-                'Delete $itemTypeName',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+              Expanded(
+                child: Text(
+                  'Delete $itemTypeName',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                    fontSize: titleFontSize,
+                  ),
                 ),
               ),
             ],
@@ -317,15 +416,21 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: verticalSpacing),
               Text(
                 'Are you sure you want to delete "${item.name ?? 'this $itemTypeName'}"?',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: bodyFontSize,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: verticalSpacing),
               Text(
                 'This action cannot be undone and all related data will be permanently removed.',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: subtitleFontSize,
+                  color: Colors.grey[600],
+                ),
               ),
             ],
           ),
@@ -334,10 +439,17 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 20 : 16,
+                  vertical: isDesktop ? 12 : 8,
+                ),
+              ),
               child: Text(
                 'Cancel',
                 style: TextStyle(
                   color: Colors.grey[600],
+                  fontSize: buttonFontSize,
                 ),
               ),
             ),
@@ -351,13 +463,17 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 24 : 20,
+                  vertical: isDesktop ? 16 : 12,
+                ),
               ),
               child: Text(
                 'Delete',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
+                  fontSize: buttonFontSize,
                 ),
               ),
             ),
@@ -678,12 +794,8 @@ void showVillageEditDialog(
                       descriptionController.text?.trim().isEmpty != false ||
                       selectedZoneId == 0 ||
                       selectedStatus == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please fill in all required fields'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    showErrorToast(
+                        context, 'Please fill in all required fields');
                     return;
                   }
 
@@ -714,12 +826,7 @@ void showVillageEditDialog(
                       cubit.editData(editModel);
                     }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error editing village: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    showErrorToast(context, 'Error editing village: $e');
                   }
 
                   // Close dialog
@@ -1311,8 +1418,73 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
   }
   print('DEBUG: selectedMaintenanceTypeId = $selectedMaintenanceTypeId');
 
+  // Dropdown state variables
+  int? selectedVillageId;
+  int? selectedZoneId;
+  int? selectedServiceId;
+
+  // Initialize dropdown values from existing item
+  if (item is Villages) {
+    selectedZoneId = item.zoneId?.toInt();
+  } else if (item is ServiceProviderModel) {
+    selectedVillageId = item.villageId?.toInt();
+    selectedZoneId = item.zoneId?.toInt();
+    selectedServiceId = item.serviceId;
+  } else if (item is Providers) {
+    selectedVillageId = item.villageId?.toInt();
+  } else if (item is MallModel) {
+    selectedZoneId = item.zoneId?.toInt();
+  }
+
   String? imagePath;
   print('DEBUG: All controllers and variables initialized successfully');
+
+  // Get screen dimensions for responsive design
+  final screenSize = MediaQuery.of(context).size;
+  final isTablet = screenSize.width > 600;
+  final isDesktop = screenSize.width > 1024;
+
+  // Responsive dimensions
+  final dialogWidth = isDesktop
+      ? screenSize.width * 0.5
+      : isTablet
+          ? screenSize.width * 0.7
+          : screenSize.width * 0.9;
+
+  final dialogHeight = isDesktop
+      ? screenSize.height * 0.7
+      : isTablet
+          ? screenSize.height * 0.8
+          : screenSize.height * 0.85;
+
+  // Responsive font sizes
+  final titleFontSize = isDesktop
+      ? 24.0
+      : isTablet
+          ? 20.0
+          : 18.0;
+  final labelFontSize = isDesktop
+      ? 16.0
+      : isTablet
+          ? 14.0
+          : 12.0;
+  final buttonFontSize = isDesktop
+      ? 16.0
+      : isTablet
+          ? 14.0
+          : 12.0;
+
+  // Responsive spacing
+  final verticalSpacing = isDesktop
+      ? 20.0
+      : isTablet
+          ? 16.0
+          : 12.0;
+  final horizontalPadding = isDesktop
+      ? 24.0
+      : isTablet
+          ? 20.0
+          : 16.0;
 
   showDialog(
     context: context,
@@ -1320,481 +1492,614 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
     builder: (BuildContext dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return AlertDialog(
-            title: Text(
-              'Edit $entityType',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: WegoColors.mainColor,
-              ),
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            content: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.8,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Name (English) - All entities
-                    _buildTextField(
-                      controller: nameController,
-                      label: '$entityType Name (English)',
-                      icon: Icons.person,
-                      isRequired: true,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Name (Arabic) - All entities
-                    _buildTextField(
-                      controller: arNameController,
-                      label: '$entityType Name (Arabic)',
-                      icon: Icons.person_outline,
-                      textDirection: TextDirection.rtl,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Description (English) - All entities
-                    _buildTextField(
-                      controller: descriptionController,
-                      label: 'Description (English)',
-                      icon: Icons.description,
-                      maxLines: 3,
-                      isRequired: true,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Description (Arabic) - All entities
-                    _buildTextField(
-                      controller: arDescriptionController,
-                      label: 'Description (Arabic)',
-                      icon: Icons.description_outlined,
-                      maxLines: 3,
-                      textDirection: TextDirection.rtl,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Location - All entities except Mall
-                    if (entityType != 'Mall') ...[
-                      _buildTextField(
-                        controller: locationController,
-                        label: 'Location',
-                        icon: Icons.location_on,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Phone - Service Provider and Maintenance Provider only
-                    if (entityType == 'Service Provider' ||
-                        entityType == 'Maintenance Provider') ...[
-                      _buildTextField(
-                        controller: phoneController,
-                        label: 'Phone Number',
-                        icon: Icons.phone,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Open From - Service Provider, Maintenance Provider and Mall
-                    if (entityType != 'Village') ...[
-                      _buildTextField(
-                        controller: openFromController,
-                        label: 'Open From',
-                        icon: Icons.access_time,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Open To - Service Provider, Maintenance Provider and Mall
-                    if (entityType != 'Village') ...[
-                      _buildTextField(
-                        controller: openToController,
-                        label: 'Open To',
-                        icon: Icons.access_time_filled,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Zone ID - Village and Mall only
-                    if (entityType == 'Village' || entityType == 'Mall') ...[
-                      _buildTextField(
-                        controller: zoneIdController,
-                        label: 'Zone ID',
-                        icon: Icons.map,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Village ID - Service Provider only
-                    if (entityType == 'Service Provider') ...[
-                      _buildTextField(
-                        controller: villageIdController,
-                        label: 'Village ID',
-                        icon: Icons.location_city,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Zone ID - Service Provider only
-                    if (entityType == 'Service Provider') ...[
-                      _buildTextField(
-                        controller: zoneIdController,
-                        label: 'Zone ID',
-                        icon: Icons.map,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Service ID - Service Provider only
-                    if (entityType == 'Service Provider') ...[
-                      _buildTextField(
-                        controller: serviceIdController,
-                        label: 'Service ID',
-                        icon: Icons.business,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Village ID - Maintenance Provider only
-                    if (entityType == 'Maintenance Provider') ...[
-                      _buildTextField(
-                        controller: villageIdController,
-                        label: 'Village ID',
-                        icon: Icons.location_city,
-                        isRequired: false,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Maintenance Type Dropdown - Maintenance Provider only
-                    if (entityType == 'Maintenance Provider') ...[
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: DropdownButtonFormField<int>(
-                          value: selectedMaintenanceTypeId,
-                          decoration: InputDecoration(
-                            labelText: 'Maintenance Type *',
-                            prefixIcon:
-                                Icon(Icons.build, color: WegoColors.mainColor),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+            child: Container(
+              width: dialogWidth,
+              height: dialogHeight,
+              padding: EdgeInsets.all(horizontalPadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title Section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Edit $entityType',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: WegoColors.mainColor,
+                            fontSize: titleFontSize,
                           ),
-                          items: cubit.maintenanceTypes
-                                  ?.map<DropdownMenuItem<int>>(
-                                      (maintenanceType) {
-                                return DropdownMenuItem<int>(
-                                  value: maintenanceType.id?.toInt(),
-                                  child:
-                                      Text(maintenanceType.name ?? 'Unknown'),
-                                );
-                              }).toList() ??
-                              [],
-                          onChanged: (int? value) {
-                            setState(() {
-                              selectedMaintenanceTypeId = value;
-                            });
-                          },
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Please select a maintenance type';
-                            }
-                            return null;
-                          },
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.grey,
+                          size: isDesktop ? 24 : 20,
+                        ),
+                      ),
                     ],
+                  ),
+                  SizedBox(height: verticalSpacing),
 
-                    // Status Switch - All entities
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.toggle_on, color: WegoColors.mainColor),
-                            SizedBox(width: 8),
-                            Text(
-                              'Status *',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Switch(
-                          value: selectedStatus == 1,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedStatus = value ? 1 : 0;
-                            });
-                          },
-                          activeColor: WegoColors.mainColor,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Image Upload Section - All entities
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  // Scrollable Content
+                  Expanded(
+                    child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          ListTile(
-                            leading: const Icon(Icons.image,
-                                color: WegoColors.mainColor),
-                            title: Text(imagePath != null
-                                ? 'Image Selected'
-                                : 'Select Image (Optional)'),
-                            subtitle: imagePath != null
-                                ? Text(imagePath!.split('/').last)
-                                : const Text('Tap to choose an image'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (imagePath != null)
-                                  IconButton(
-                                    icon: const Icon(Icons.clear,
-                                        color: Colors.red),
-                                    onPressed: () {
-                                      setState(() {
-                                        imagePath = null;
-                                      });
-                                    },
-                                  ),
-                                const Icon(Icons.upload_file),
-                              ],
-                            ),
-                            onTap: () async {
-                              final path = await _pickImage();
-                              if (path != null) {
-                                setState(() {
-                                  imagePath = path;
-                                });
-                              }
-                            },
+                          // Name (English) - All entities
+                          _buildResponsiveTextField(
+                            controller: nameController,
+                            label: '$entityType Name (English)',
+                            icon: Icons.person,
+                            isRequired: true,
+                            fontSize: labelFontSize,
+                            isDesktop: isDesktop,
                           ),
-                          if (imagePath != null) ...[
-                            const Divider(height: 1),
-                            Container(
-                              height: 100,
-                              width: double.infinity,
-                              margin: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  File(imagePath!),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                          SizedBox(height: verticalSpacing),
+
+                          // Name (Arabic) - All entities
+                          _buildResponsiveTextField(
+                            controller: arNameController,
+                            label: '$entityType Name (Arabic)',
+                            icon: Icons.person_outline,
+                            textDirection: TextDirection.rtl,
+                            fontSize: labelFontSize,
+                            isDesktop: isDesktop,
+                          ),
+                          SizedBox(height: verticalSpacing),
+
+                          // Description (English) - All entities
+                          _buildResponsiveTextField(
+                            controller: descriptionController,
+                            label: 'Description (English)',
+                            icon: Icons.description,
+                            maxLines: 3,
+                            isRequired: true,
+                            fontSize: labelFontSize,
+                            isDesktop: isDesktop,
+                          ),
+                          SizedBox(height: verticalSpacing),
+
+                          // Description (Arabic) - All entities
+                          _buildResponsiveTextField(
+                            controller: arDescriptionController,
+                            label: 'Description (Arabic)',
+                            icon: Icons.description_outlined,
+                            maxLines: 3,
+                            textDirection: TextDirection.rtl,
+                            fontSize: labelFontSize,
+                            isDesktop: isDesktop,
+                          ),
+                          SizedBox(height: verticalSpacing),
+
+                          // Location - All entities except Mall
+                          if (entityType != 'Mall') ...[
+                            _buildResponsiveTextField(
+                              controller: locationController,
+                              label: 'Location',
+                              icon: Icons.location_on,
+                              isRequired: true,
+                              fontSize: labelFontSize,
+                              isDesktop: isDesktop,
                             ),
+                            SizedBox(height: verticalSpacing),
                           ],
+
+                          // Phone - Service Provider and Maintenance Provider only
+                          if (entityType == 'Service Provider' ||
+                              entityType == 'Maintenance Provider') ...[
+                            _buildResponsiveTextField(
+                              controller: phoneController,
+                              label: 'Phone Number',
+                              icon: Icons.phone,
+                              isRequired: true,
+                              fontSize: labelFontSize,
+                              isDesktop: isDesktop,
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Open From - Service Provider, Maintenance Provider and Mall
+                          if (entityType != 'Village') ...[
+                            _buildResponsiveTextField(
+                              controller: openFromController,
+                              label: 'Open From',
+                              icon: Icons.access_time,
+                              isRequired: true,
+                              fontSize: labelFontSize,
+                              isDesktop: isDesktop,
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Open To - Service Provider, Maintenance Provider and Mall
+                          if (entityType != 'Village') ...[
+                            _buildResponsiveTextField(
+                              controller: openToController,
+                              label: 'Open To',
+                              icon: Icons.access_time_filled,
+                              isRequired: true,
+                              fontSize: labelFontSize,
+                              isDesktop: isDesktop,
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Zone Dropdown - Village and Mall only
+                          if (entityType == 'Village' ||
+                              entityType == 'Mall') ...[
+                            BlocBuilder<VillageCubit, VillageStates>(
+                              builder: (context, state) {
+                                final villageCubit = VillageCubit.get(context);
+                                return _buildResponsiveDropdown<int>(
+                                  value: selectedZoneId,
+                                  label: 'Select Zone *',
+                                  icon: Icons.map,
+                                  items: villageCubit.zones.map((zone) {
+                                    return DropdownMenuItem<int>(
+                                      value: zone.id?.toInt(),
+                                      child: Text(
+                                        zone.name ?? 'Unnamed Zone',
+                                        style:
+                                            TextStyle(fontSize: labelFontSize),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedZoneId = value;
+                                    });
+                                  },
+                                  fontSize: labelFontSize,
+                                  isDesktop: isDesktop,
+                                );
+                              },
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Village Dropdown - Service Provider only
+                          if (entityType == 'Service Provider') ...[
+                            BlocBuilder<VillageCubit, VillageStates>(
+                              builder: (context, state) {
+                                final villageCubit = VillageCubit.get(context);
+                                return _buildResponsiveDropdown<int>(
+                                  value: selectedVillageId,
+                                  label: 'Select Village (Optional)',
+                                  icon: Icons.location_city,
+                                  items: [
+                                    DropdownMenuItem<int>(
+                                      value: null,
+                                      child: Text(
+                                        'No Village',
+                                        style:
+                                            TextStyle(fontSize: labelFontSize),
+                                      ),
+                                    ),
+                                    ...villageCubit.items.map((village) {
+                                      return DropdownMenuItem<int>(
+                                        value: village.id?.toInt(),
+                                        child: Text(
+                                          village.name ?? 'Unnamed Village',
+                                          style: TextStyle(
+                                              fontSize: labelFontSize),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedVillageId = value;
+                                    });
+                                  },
+                                  fontSize: labelFontSize,
+                                  isDesktop: isDesktop,
+                                );
+                              },
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Zone Dropdown - Service Provider only
+                          if (entityType == 'Service Provider') ...[
+                            BlocBuilder<VillageCubit, VillageStates>(
+                              builder: (context, state) {
+                                final villageCubit = VillageCubit.get(context);
+                                return _buildResponsiveDropdown<int>(
+                                  value: selectedZoneId,
+                                  label: 'Select Zone (Optional)',
+                                  icon: Icons.map,
+                                  items: [
+                                    DropdownMenuItem<int>(
+                                      value: null,
+                                      child: Text(
+                                        'No Zone',
+                                        style:
+                                            TextStyle(fontSize: labelFontSize),
+                                      ),
+                                    ),
+                                    ...villageCubit.zones.map((zone) {
+                                      return DropdownMenuItem<int>(
+                                        value: zone.id?.toInt(),
+                                        child: Text(
+                                          zone.name ?? 'Unnamed Zone',
+                                          style: TextStyle(
+                                              fontSize: labelFontSize),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedZoneId = value;
+                                    });
+                                  },
+                                  fontSize: labelFontSize,
+                                  isDesktop: isDesktop,
+                                );
+                              },
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Service Type Dropdown - Service Provider only
+                          if (entityType == 'Service Provider') ...[
+                            BlocBuilder<ServiceProviderCubit,
+                                ServiceProviderStates>(
+                              builder: (context, state) {
+                                final serviceProviderCubit =
+                                    BlocProvider.of<ServiceProviderCubit>(
+                                        context);
+                                // Extract unique service types from service providers
+                                final uniqueServices = <int, ServiceType>{};
+                                for (var provider
+                                    in serviceProviderCubit.items) {
+                                  if (provider.service != null) {
+                                    uniqueServices[provider.service!.id] =
+                                        provider.service!;
+                                  }
+                                }
+
+                                return _buildResponsiveDropdown<int>(
+                                  value: selectedServiceId,
+                                  label: 'Select Service Type *',
+                                  icon: Icons.business,
+                                  items: uniqueServices.values.map((service) {
+                                    return DropdownMenuItem<int>(
+                                      value: service.id,
+                                      child: Text(
+                                        service.name,
+                                        style:
+                                            TextStyle(fontSize: labelFontSize),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedServiceId = value;
+                                    });
+                                  },
+                                  fontSize: labelFontSize,
+                                  isDesktop: isDesktop,
+                                );
+                              },
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Village Dropdown - Maintenance Provider only
+                          if (entityType == 'Maintenance Provider') ...[
+                            BlocBuilder<VillageCubit, VillageStates>(
+                              builder: (context, state) {
+                                final villageCubit = VillageCubit.get(context);
+                                return _buildResponsiveDropdown<int>(
+                                  value: selectedVillageId,
+                                  label: 'Select Village (Optional)',
+                                  icon: Icons.location_city,
+                                  items: [
+                                    DropdownMenuItem<int>(
+                                      value: null,
+                                      child: Text(
+                                        'No Village',
+                                        style:
+                                            TextStyle(fontSize: labelFontSize),
+                                      ),
+                                    ),
+                                    ...villageCubit.items.map((village) {
+                                      return DropdownMenuItem<int>(
+                                        value: village.id?.toInt(),
+                                        child: Text(
+                                          village.name ?? 'Unnamed Village',
+                                          style: TextStyle(
+                                              fontSize: labelFontSize),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedVillageId = value;
+                                    });
+                                  },
+                                  fontSize: labelFontSize,
+                                  isDesktop: isDesktop,
+                                );
+                              },
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Maintenance Type Dropdown - Maintenance Provider only
+                          if (entityType == 'Maintenance Provider') ...[
+                            _buildResponsiveDropdown<int>(
+                              value: selectedMaintenanceTypeId,
+                              label: 'Maintenance Type *',
+                              icon: Icons.build,
+                              items: cubit.maintenanceTypes
+                                      ?.map<DropdownMenuItem<int>>(
+                                          (maintenanceType) {
+                                    return DropdownMenuItem<int>(
+                                      value: maintenanceType.id?.toInt(),
+                                      child: Text(
+                                        maintenanceType.name ?? 'Unknown',
+                                        style:
+                                            TextStyle(fontSize: labelFontSize),
+                                      ),
+                                    );
+                                  }).toList() ??
+                                  [],
+                              onChanged: (int? value) {
+                                setState(() {
+                                  selectedMaintenanceTypeId = value;
+                                });
+                              },
+                              fontSize: labelFontSize,
+                              isDesktop: isDesktop,
+                            ),
+                            SizedBox(height: verticalSpacing),
+                          ],
+
+                          // Status Switch - All entities
+                          _buildResponsiveStatusSwitch(
+                            selectedStatus: selectedStatus ?? 1,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedStatus = value ? 1 : 0;
+                              });
+                            },
+                            fontSize: labelFontSize,
+                            isDesktop: isDesktop,
+                          ),
+                          SizedBox(height: verticalSpacing),
+
+                          // Image Upload Section - All entities
+                          _buildResponsiveImageUpload(
+                            imagePath: imagePath,
+                            onImageSelected: (path) {
+                              setState(() {
+                                imagePath = path;
+                              });
+                            },
+                            onImageRemoved: () {
+                              setState(() {
+                                imagePath = null;
+                              });
+                            },
+                            fontSize: labelFontSize,
+                            isDesktop: isDesktop,
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  SizedBox(height: verticalSpacing),
+
+                  // Action Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isDesktop ? 20 : 16,
+                            vertical: isDesktop ? 12 : 8,
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: buttonFontSize,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Validate required fields based on entity type
+                          bool isValid = true;
+                          String errorMessage = '';
+
+                          if (nameController.text.trim().isEmpty ||
+                              descriptionController.text.trim().isEmpty ||
+                              selectedStatus == null) {
+                            isValid = false;
+                            errorMessage = 'Please fill in all required fields';
+                          }
+
+                          // Entity-specific validation
+                          if (entityType == 'Village' &&
+                              (locationController.text.trim().isEmpty ||
+                                  selectedZoneId == null)) {
+                            isValid = false;
+                            errorMessage =
+                                'Location and Zone are required for villages';
+                          }
+
+                          if (entityType == 'Mall' &&
+                              (openFromController.text.trim().isEmpty ||
+                                  openToController.text.trim().isEmpty ||
+                                  selectedZoneId == null)) {
+                            isValid = false;
+                            errorMessage =
+                                'Open From, Open To, and Zone are required for malls';
+                          }
+
+                          if (entityType == 'Service Provider' &&
+                              (phoneController.text.trim().isEmpty ||
+                                  openFromController.text.trim().isEmpty ||
+                                  openToController.text.trim().isEmpty ||
+                                  locationController.text.trim().isEmpty ||
+                                  selectedServiceId == null)) {
+                            isValid = false;
+                            errorMessage =
+                                'Phone, Location, Open From, Open To, and Service Type are required for service provider';
+                          }
+
+                          if (entityType == 'Maintenance Provider' &&
+                              (phoneController.text.trim().isEmpty ||
+                                  openFromController.text.trim().isEmpty ||
+                                  openToController.text.trim().isEmpty ||
+                                  locationController.text.trim().isEmpty ||
+                                  selectedMaintenanceTypeId == null)) {
+                            isValid = false;
+                            errorMessage =
+                                'All fields are required for maintenance provider';
+                          }
+
+                          if (!isValid) {
+                            showErrorToast(context, errorMessage);
+                            return;
+                          }
+
+                          try {
+                            if (cubit != null) {
+                              // Create appropriate edit model based on entity type
+                              if (entityType == 'Village') {
+                                VillageEditModel editModel =
+                                    await VillageEditModel.fromFormData(
+                                  villageId: item.id ?? 0,
+                                  name: nameController.text.trim(),
+                                  location: locationController.text.trim(),
+                                  description:
+                                      descriptionController.text.trim(),
+                                  arName: arNameController.text.trim(),
+                                  arDescription:
+                                      arDescriptionController.text.trim(),
+                                  zoneId: selectedZoneId ?? 0,
+                                  status: selectedStatus?.toInt() ?? 0,
+                                  imagePath: imagePath,
+                                );
+                                cubit.editData(editModel);
+                              } else if (entityType == 'Mall') {
+                                MallEditModel editModel =
+                                    await MallEditModel.fromFormData(
+                                  mallId: item.id,
+                                  name: nameController.text.trim(),
+                                  description:
+                                      descriptionController.text.trim(),
+                                  openFrom: openFromController.text.trim(),
+                                  openTo: openToController.text.trim(),
+                                  zoneId: selectedZoneId ?? item.zoneId,
+                                  status: selectedStatus?.toInt() ?? 0,
+                                  arName: arNameController.text.trim(),
+                                  arDescription:
+                                      arDescriptionController.text.trim(),
+                                  imagePath: imagePath,
+                                );
+                                cubit.editData(editModel);
+                              } else if (entityType == 'Service Provider') {
+                                ServiceProviderEditModel editModel =
+                                    await ServiceProviderEditModel.fromFormData(
+                                  serviceProviderId: item.id,
+                                  serviceId:
+                                      selectedServiceId ?? item.serviceId,
+                                  name: nameController.text.trim(),
+                                  description:
+                                      descriptionController.text.trim(),
+                                  phone: phoneController.text.trim(),
+                                  status: selectedStatus?.toInt() ?? 0,
+                                  location: locationController.text.trim(),
+                                  arName: arNameController.text.trim(),
+                                  arDescription:
+                                      arDescriptionController.text.trim(),
+                                  imagePath: imagePath,
+                                  openFrom: openFromController.text.trim(),
+                                  openTo: openToController.text.trim(),
+                                  zoneId: selectedZoneId,
+                                  villageId: selectedVillageId,
+                                );
+                                cubit.editData(editModel);
+                              } else if (entityType == 'Maintenance Provider') {
+                                MaintenanceProviderEditModel editModel =
+                                    await MaintenanceProviderEditModel
+                                        .fromFormData(
+                                  maintenanceProviderId: item.id,
+                                  name: nameController.text.trim(),
+                                  description:
+                                      descriptionController.text.trim(),
+                                  phone: phoneController.text.trim(),
+                                  location: locationController.text.trim(),
+                                  openFrom: openFromController.text.trim(),
+                                  openTo: openToController.text.trim(),
+                                  maintenanceTypeId:
+                                      selectedMaintenanceTypeId ?? 0,
+                                  status: selectedStatus?.toInt() ?? 0,
+                                  arName: arNameController.text.trim(),
+                                  arDescription:
+                                      arDescriptionController.text.trim(),
+                                  imagePath: imagePath,
+                                  villageId: selectedVillageId,
+                                );
+                                cubit.editData(editModel);
+                              }
+
+                              showSuccessToast(
+                                  context, '$entityType updated successfully!');
+                            }
+                          } catch (e) {
+                            showErrorToast(
+                                context, 'Error updating $entityType: $e');
+                          }
+
+                          Navigator.of(dialogContext).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: WegoColors.mainColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isDesktop ? 24 : 16,
+                            vertical: isDesktop ? 16 : 12,
+                          ),
+                        ),
+                        child: Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: buttonFontSize,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                },
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  // Validate required fields based on entity type
-                  bool isValid = true;
-                  String errorMessage = '';
-
-                  if (nameController.text.trim().isEmpty ||
-                      descriptionController.text.trim().isEmpty ||
-                      selectedStatus == null) {
-                    isValid = false;
-                    errorMessage = 'Please fill in all required fields';
-                  }
-
-                  // Entity-specific validation
-                  if (entityType == 'Village' &&
-                      (locationController.text.trim().isEmpty ||
-                          zoneIdController.text.trim().isEmpty)) {
-                    isValid = false;
-                    errorMessage =
-                        'Location and Zone ID are required for villages';
-                  }
-
-                  if (entityType == 'Mall' &&
-                      (openFromController.text.trim().isEmpty ||
-                          openToController.text.trim().isEmpty ||
-                          zoneIdController.text.trim().isEmpty)) {
-                    isValid = false;
-                    errorMessage =
-                        'Open From, Open To, and Zone ID are required for malls';
-                  }
-
-                  if (entityType == 'Service Provider' &&
-                      (phoneController.text.trim().isEmpty ||
-                          openFromController.text.trim().isEmpty ||
-                          openToController.text.trim().isEmpty ||
-                          locationController.text.trim().isEmpty ||
-                          villageIdController.text.trim().isEmpty ||
-                          zoneIdController.text.trim().isEmpty ||
-                          serviceIdController.text.trim().isEmpty)) {
-                    isValid = false;
-                    errorMessage =
-                        'All fields are required for service provider';
-                  }
-
-                  if (entityType == 'Maintenance Provider' &&
-                      (phoneController.text.trim().isEmpty ||
-                          openFromController.text.trim().isEmpty ||
-                          openToController.text.trim().isEmpty ||
-                          locationController.text.trim().isEmpty ||
-                          selectedMaintenanceTypeId == null)) {
-                    isValid = false;
-                    errorMessage =
-                        'All fields are required for maintenance provider';
-                  }
-
-                  if (!isValid) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(errorMessage),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  try {
-                    if (cubit != null) {
-                      // Create appropriate edit model based on entity type
-                      if (entityType == 'Village') {
-                        VillageEditModel editModel =
-                            await VillageEditModel.fromFormData(
-                          villageId: item.id ?? 0,
-                          name: nameController.text.trim(),
-                          location: locationController.text.trim(),
-                          description: descriptionController.text.trim(),
-                          arName: arNameController.text.trim(),
-                          arDescription: arDescriptionController.text.trim(),
-                          zoneId:
-                              int.tryParse(zoneIdController.text.trim()) ?? 0,
-                          status: selectedStatus?.toInt() ?? 0,
-                          imagePath: imagePath,
-                        );
-                        cubit.editData(editModel);
-                      } else if (entityType == 'Mall') {
-                        MallEditModel editModel =
-                            await MallEditModel.fromFormData(
-                          mallId: item.id,
-                          name: nameController.text.trim(),
-                          description: descriptionController.text.trim(),
-                          openFrom: openFromController.text.trim(),
-                          openTo: openToController.text.trim(),
-                          zoneId: int.tryParse(zoneIdController.text.trim()) ??
-                              item.zoneId,
-                          status: selectedStatus?.toInt() ?? 0,
-                          arName: arNameController.text.trim(),
-                          arDescription: arDescriptionController.text.trim(),
-                          imagePath: imagePath,
-                        );
-                        cubit.editData(editModel);
-                      } else if (entityType == 'Service Provider') {
-                        print(
-                            'DEBUG: Original item.serviceId: ${item.serviceId}');
-                        print(
-                            'DEBUG: Form serviceIdController: ${serviceIdController.text.trim()}');
-                        print('DEBUG: item.id (provider ID): ${item.id}');
-
-                        ServiceProviderEditModel editModel =
-                            await ServiceProviderEditModel.fromFormData(
-                          serviceProviderId: item.id,
-                          serviceId:
-                              int.tryParse(serviceIdController.text.trim()) ??
-                                  item.serviceId,
-                          name: nameController.text.trim(),
-                          description: descriptionController.text.trim(),
-                          phone: phoneController.text.trim(),
-                          status: selectedStatus?.toInt() ?? 0,
-                          location: locationController.text.trim(),
-                          arName: arNameController.text.trim(),
-                          arDescription: arDescriptionController.text.trim(),
-                          imagePath: imagePath,
-                          openFrom: openFromController.text.trim(),
-                          openTo: openToController.text.trim(),
-                          zoneId: int.tryParse(zoneIdController.text.trim()),
-                          villageId:
-                              int.tryParse(villageIdController.text.trim()),
-                        );
-                        cubit.editData(editModel);
-                      } else if (entityType == 'Maintenance Provider') {
-                        MaintenanceProviderEditModel editModel =
-                            await MaintenanceProviderEditModel.fromFormData(
-                          maintenanceProviderId: item.id,
-                          name: nameController.text.trim(),
-                          description: descriptionController.text.trim(),
-                          phone: phoneController.text.trim(),
-                          location: locationController.text.trim(),
-                          openFrom: openFromController.text.trim(),
-                          openTo: openToController.text.trim(),
-                          maintenanceTypeId: selectedMaintenanceTypeId ?? 0,
-                          status: selectedStatus?.toInt() ?? 0,
-                          arName: arNameController.text.trim(),
-                          arDescription: arDescriptionController.text.trim(),
-                          imagePath: imagePath,
-                          villageId:
-                              int.tryParse(villageIdController.text.trim()),
-                        );
-                        cubit.editData(editModel);
-                      }
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error editing $entityType: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-
-                  Navigator.of(dialogContext).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: WegoColors.mainColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
           );
         },
       );
@@ -1805,36 +2110,21 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
 void showServiceProviderEditDialog(
     BuildContext context, ServiceProviderModel serviceProvider, dynamic cubit) {
   // Implementation for service provider edit dialog with all required fields
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content:
-          Text('Service Provider edit dialog - implementation in progress'),
-      backgroundColor: Colors.orange,
-    ),
-  );
+  showCustomToast(
+      context, 'Service Provider edit dialog - implementation in progress');
 }
 
 void showMaintenanceProviderEditDialog(BuildContext context,
     MaintenanceProviderModel maintenanceProvider, dynamic cubit) {
   // Implementation for maintenance provider edit dialog
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content:
-          Text('Maintenance Provider edit dialog - implementation in progress'),
-      backgroundColor: Colors.orange,
-    ),
-  );
+  showCustomToast(
+      context, 'Maintenance Provider edit dialog - implementation in progress');
 }
 
 void showGenericEditDialog(
     BuildContext context, dynamic item, String itemType, dynamic cubit) {
   // Generic fallback edit dialog
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text('Edit dialog for $itemType - implementation needed'),
-      backgroundColor: Colors.blue,
-    ),
-  );
+  showCustomToast(context, 'Edit dialog for $itemType - implementation needed');
 }
 
 Widget _buildTextField({
@@ -2027,4 +2317,215 @@ class MaintenanceProviderItem implements ExpandableItem {
 
   // Getter to access the original maintenance provider object
   Providers get maintenanceProvider => _maintenanceProvider;
+}
+
+// Add responsive helper functions at the end of the file
+Widget _buildResponsiveTextField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  bool isRequired = false,
+  int maxLines = 1,
+  TextDirection? textDirection,
+  required double fontSize,
+  required bool isDesktop,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      textDirection: textDirection,
+      style: TextStyle(fontSize: fontSize),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(fontSize: fontSize * 0.9),
+        prefixIcon: Icon(
+          icon,
+          color: WegoColors.mainColor,
+          size: isDesktop ? 24 : 20,
+        ),
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 16 : 12,
+          vertical: isDesktop ? 16 : 12,
+        ),
+      ),
+      validator: isRequired
+          ? (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'This field is required';
+              }
+              return null;
+            }
+          : null,
+    ),
+  );
+}
+
+Widget _buildResponsiveDropdown<T>({
+  required T? value,
+  required String label,
+  required IconData icon,
+  required List<DropdownMenuItem<T>> items,
+  required void Function(T?) onChanged,
+  required double fontSize,
+  required bool isDesktop,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: DropdownButtonFormField<T>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(fontSize: fontSize * 0.9),
+        prefixIcon: Icon(
+          icon,
+          color: WegoColors.mainColor,
+          size: isDesktop ? 24 : 20,
+        ),
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 16 : 12,
+          vertical: isDesktop ? 16 : 12,
+        ),
+      ),
+      items: items,
+      onChanged: onChanged,
+      style: TextStyle(fontSize: fontSize, color: Colors.black),
+    ),
+  );
+}
+
+Widget _buildResponsiveStatusSwitch({
+  required num selectedStatus,
+  required void Function(bool) onChanged,
+  required double fontSize,
+  required bool isDesktop,
+}) {
+  return Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: isDesktop ? 16 : 12,
+      vertical: isDesktop ? 12 : 8,
+    ),
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.toggle_on,
+              color: WegoColors.mainColor,
+              size: isDesktop ? 24 : 20,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Status *',
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        Switch(
+          value: selectedStatus == 1,
+          onChanged: onChanged,
+          activeColor: WegoColors.mainColor,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildResponsiveImageUpload({
+  required String? imagePath,
+  required void Function(String?) onImageSelected,
+  required void Function() onImageRemoved,
+  required double fontSize,
+  required bool isDesktop,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      children: [
+        ListTile(
+          leading: Icon(
+            Icons.image,
+            color: WegoColors.mainColor,
+            size: isDesktop ? 24 : 20,
+          ),
+          title: Text(
+            imagePath != null ? 'Image Selected' : 'Select Image (Optional)',
+            style: TextStyle(fontSize: fontSize),
+          ),
+          subtitle: imagePath != null
+              ? Text(
+                  imagePath!.split('/').last,
+                  style: TextStyle(fontSize: fontSize * 0.8),
+                )
+              : Text(
+                  'Tap to choose an image',
+                  style: TextStyle(fontSize: fontSize * 0.8),
+                ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (imagePath != null)
+                IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: Colors.red,
+                    size: isDesktop ? 20 : 18,
+                  ),
+                  onPressed: onImageRemoved,
+                ),
+              Icon(
+                Icons.upload_file,
+                size: isDesktop ? 20 : 18,
+              ),
+            ],
+          ),
+          onTap: () async {
+            final path = await _pickImage();
+            if (path != null) {
+              onImageSelected(path);
+            }
+          },
+        ),
+        if (imagePath != null) ...[
+          const Divider(height: 1),
+          Container(
+            height: isDesktop ? 120 : 100,
+            width: double.infinity,
+            margin: EdgeInsets.all(isDesktop ? 12 : 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                File(imagePath!),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
 }

@@ -1,8 +1,11 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sa7el/Cubit/authentication/auth_state.dart';
 import 'package:sa7el/Model/admin_model.dart';
+import 'package:sa7el/Model/user_model.dart';
 import 'package:sa7el/controller/cashe/cashe_Helper.dart';
 import 'package:sa7el/controller/dio/dio_helper.dart';
 import 'package:sa7el/controller/dio/end_points.dart';
@@ -82,5 +85,22 @@ class AuthenticationCubit extends Cubit<AuthenticationStates> {
       default:
         return 'An unknown network error occurred.';
     }
+  }
+
+  UserModel? userModel;
+
+  void getAdminData() async {
+    final token = CacheHelper.getData(key: 'token');
+    DioHelper.getData(
+      url: WegoEndPoints.adminDataEndPoint,
+      token: token,
+    ).then((value) {
+      userModel = UserModel.fromJson(value.data['user']);
+      log(userModel!.name.toString());
+      emit(AuthenticationUserModel(userModel));
+    }).catchError((error) {
+      log(error.toString());
+      emit(AuthenticationLoginStateFailed(error.toString()));
+    });
   }
 }

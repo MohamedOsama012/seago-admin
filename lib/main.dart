@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
 import 'package:sa7el/Cubit/authentication/auth_cubit.dart';
 import 'package:sa7el/Cubit/bloc_observer.dart';
+import 'package:sa7el/Cubit/maintenance_providers/maintenance_cubit.dart';
 import 'package:sa7el/Cubit/malls/malls_cubit.dart';
+import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 import 'package:sa7el/controller/cashe/cashe_Helper.dart';
 import 'package:sa7el/controller/dio/dio_helper.dart';
 import 'package:sa7el/views/Authentication/login_page.dart';
@@ -34,11 +36,11 @@ class MaterialCall extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => MallsCubit()),
         BlocProvider(create: (context) => VillageCubit()..getData()),
         BlocProvider(create: (context) => AuthenticationCubit()),
         BlocProvider(create: (context) => MallsCubit()..getData()),
-        BlocProvider(create: (context) => VillageCubit()),
+        BlocProvider(create: (context) => ServiceProviderCubit()..getData()),
+        BlocProvider(create: (context) => MaintenanceCubit()..getData()),
       ],
       child: MaterialApp(home: startWidget, debugShowCheckedModeBanner: false),
     );

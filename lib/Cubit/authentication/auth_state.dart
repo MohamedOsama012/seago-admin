@@ -1,4 +1,5 @@
 import 'package:sa7el/Model/admin_model.dart';
+import 'package:sa7el/Model/user_model.dart';
 
 abstract class AuthenticationStates {}
 
@@ -15,3 +16,8 @@ class AuthenticationLoginStateFailed extends AuthenticationStates {
 }
 
 class AuthenticationLoginStateLoading extends AuthenticationStates {}
+
+class AuthenticationUserModel extends AuthenticationStates {
+  final UserModel? userModel;
+  AuthenticationUserModel(this.userModel);
+}

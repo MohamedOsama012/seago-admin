@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sa7el/Core/colors.dart';
+import 'package:sa7el/Core/toast_helper.dart';
 import 'package:sa7el/Model/maintenance_provider_model.dart';
 
 import 'package:sa7el/views/Home/Widgets/custom_appBar.dart';
@@ -69,19 +70,12 @@ class _MaintenanceProviderPageState extends State<MaintenanceProviderPage> {
   }
 
   void _addMaintenanceProvider() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add Maintenance Provider feature to be implemented'),
-      ),
-    );
+    showCustomToast(
+        context, 'Add Maintenance Provider feature to be implemented');
   }
 
   void _editMaintenanceProvider(MaintenanceProviderModel provider) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Edit ${provider.name} feature to be implemented'),
-      ),
-    );
+    showCustomToast(context, 'Edit ${provider.name} feature to be implemented');
   }
 
   void _deleteMaintenanceProvider(MaintenanceProviderModel provider) {
@@ -103,11 +97,8 @@ class _MaintenanceProviderPageState extends State<MaintenanceProviderPage> {
                   _filterProviders();
                 });
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${provider.name} deleted successfully'),
-                  ),
-                );
+                showSuccessToast(
+                    context, '${provider.name} deleted successfully');
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
