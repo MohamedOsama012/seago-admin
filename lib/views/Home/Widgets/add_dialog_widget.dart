@@ -371,6 +371,8 @@ class ServiceProviderAddModel {
   }
 
   Map<String, dynamic> toApiData() {
+    log('DEBUG: ServiceProviderAddModel.toApiData() - serviceId: $serviceId');
+
     Map<String, dynamic> data = {
       'service_id': serviceId,
       'name': name,
@@ -739,26 +741,26 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
 
                           // Open From - Service Provider, Maintenance Provider and Mall
                           if (entityType != 'Village') ...[
-                            _buildResponsiveTextField(
+                            _buildResponsiveTimeField(
                               controller: openFromController,
                               label: 'Open From',
                               icon: Icons.access_time,
-                              isRequired: false,
                               fontSize: labelFontSize,
                               isDesktop: isDesktop,
+                              context: context,
                             ),
                             SizedBox(height: verticalSpacing),
                           ],
 
                           // Open To - Service Provider, Maintenance Provider and Mall
                           if (entityType != 'Village') ...[
-                            _buildResponsiveTextField(
+                            _buildResponsiveTimeField(
                               controller: openToController,
                               label: 'Open To',
                               icon: Icons.access_time_filled,
-                              isRequired: false,
                               fontSize: labelFontSize,
                               isDesktop: isDesktop,
+                              context: context,
                             ),
                             SizedBox(height: verticalSpacing),
                           ],
@@ -1056,9 +1058,16 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                           bool isValid = true;
                           String errorMessage = '';
 
-                          if (nameController.text.trim().isEmpty) {
+                          if (nameController.text.trim().isEmpty ||
+                              selectedStatus == null) {
                             isValid = false;
                             errorMessage = 'Please fill in all required fields';
+                          }
+
+                          // Image validation - required for all entities
+                          if (imagePath == null) {
+                            isValid = false;
+                            errorMessage = 'Image is required';
                           }
 
                           // Entity-specific validation
@@ -1070,7 +1079,8 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                 'Location and Zone are required for villages';
                           }
 
-                          if (entityType == 'Mall' && selectedZoneId == null) {
+                          if (entityType == 'Mall' &&
+                              (selectedZoneId == null)) {
                             isValid = false;
                             errorMessage = 'Zone is required for malls';
                           }
@@ -1137,6 +1147,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                 await cubit.addData(addModel);
                                 addSuccess = true;
                               } else if (entityType == 'Service Provider') {
+                                log('DEBUG: Service Provider Add - selectedServiceId: $selectedServiceId');
                                 ServiceProviderAddModel addModel =
                                     await ServiceProviderAddModel.fromFormData(
                                   serviceId: selectedServiceId ?? 0,
@@ -1155,6 +1166,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                   zoneId: selectedZoneId,
                                   villageId: selectedVillageId,
                                 );
+                                log('DEBUG: Service Provider Add - serviceId in model: ${addModel.serviceId}');
                                 await cubit.addData(addModel);
                                 addSuccess = true;
                               } else if (entityType == 'Maintenance Provider') {
@@ -1404,7 +1416,7 @@ Widget _buildResponsiveImageUpload({
             size: isDesktop ? 24 : 20,
           ),
           title: Text(
-            imagePath != null ? 'Image Selected' : 'Select Image (Optional)',
+            imagePath != null ? 'Image Selected' : 'Select Image *',
             style: TextStyle(fontSize: fontSize),
           ),
           subtitle: imagePath != null
@@ -1413,7 +1425,7 @@ Widget _buildResponsiveImageUpload({
                   style: TextStyle(fontSize: fontSize * 0.8),
                 )
               : Text(
-                  'Tap to choose an image',
+                  'Tap to choose an image (Required)',
                   style: TextStyle(fontSize: fontSize * 0.8),
                 ),
           trailing: Row(
@@ -1461,6 +1473,58 @@ Widget _buildResponsiveImageUpload({
           ),
         ],
       ],
+    ),
+  );
+}
+
+Widget _buildResponsiveTimeField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  required double fontSize,
+  required bool isDesktop,
+  required BuildContext context,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: TextFormField(
+      controller: controller,
+      readOnly: true,
+      style: TextStyle(fontSize: fontSize),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(fontSize: fontSize * 0.9),
+        prefixIcon: Icon(
+          icon,
+          color: WegoColors.mainColor,
+          size: isDesktop ? 24 : 20,
+        ),
+        suffixIcon: Icon(
+          Icons.schedule,
+          color: WegoColors.mainColor,
+          size: isDesktop ? 20 : 18,
+        ),
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 16 : 12,
+          vertical: isDesktop ? 16 : 12,
+        ),
+      ),
+      onTap: () async {
+        TimeOfDay? pickedTime = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (pickedTime != null) {
+          // Format time as hh:mm:ss
+          String formattedTime =
+              '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}:00';
+          controller.text = formattedTime;
+        }
+      },
     ),
   );
 }

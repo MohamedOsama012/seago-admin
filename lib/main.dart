@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
@@ -19,6 +21,7 @@ void main() async {
   Widget? startWidget;
   // CacheHelper.removeData(key: 'token');
   final token = CacheHelper.getData(key: 'token');
+  log(token.toString());
 
   if (token != null) {
     startWidget = const HomeScreen();

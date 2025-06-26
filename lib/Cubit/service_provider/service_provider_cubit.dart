@@ -32,7 +32,7 @@ class ServiceProviderCubit
       final apiData = addModel.toApiData();
 
       final response = await DioHelper.postData(
-        url: WegoEndPoints.addProviderEndPoint,
+        url: WegoEndPoints.addServiceProviderEndPoint,
         data: apiData,
         token: token,
       );

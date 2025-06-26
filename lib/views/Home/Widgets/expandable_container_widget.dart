@@ -724,7 +724,8 @@ void showVillageEditDialog(
                                 : 'Select Image (Optional)'),
                             subtitle: imagePath != null
                                 ? Text(imagePath!.split('/').last)
-                                : const Text('Tap to choose an image'),
+                                : const Text(
+                                    'Tap to choose an image (Optional)'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1610,26 +1611,26 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
 
                           // Open From - Service Provider, Maintenance Provider and Mall
                           if (entityType != 'Village') ...[
-                            _buildResponsiveTextField(
+                            _buildResponsiveTimeField(
                               controller: openFromController,
                               label: 'Open From',
                               icon: Icons.access_time,
-                              isRequired: true,
                               fontSize: labelFontSize,
                               isDesktop: isDesktop,
+                              context: context,
                             ),
                             SizedBox(height: verticalSpacing),
                           ],
 
                           // Open To - Service Provider, Maintenance Provider and Mall
                           if (entityType != 'Village') ...[
-                            _buildResponsiveTextField(
+                            _buildResponsiveTimeField(
                               controller: openToController,
                               label: 'Open To',
                               icon: Icons.access_time_filled,
-                              isRequired: true,
                               fontSize: labelFontSize,
                               isDesktop: isDesktop,
+                              context: context,
                             ),
                             SizedBox(height: verticalSpacing),
                           ],
@@ -2478,7 +2479,7 @@ Widget _buildResponsiveImageUpload({
                   style: TextStyle(fontSize: fontSize * 0.8),
                 )
               : Text(
-                  'Tap to choose an image',
+                  'Tap to choose an image (Optional)',
                   style: TextStyle(fontSize: fontSize * 0.8),
                 ),
           trailing: Row(
@@ -2526,6 +2527,58 @@ Widget _buildResponsiveImageUpload({
           ),
         ],
       ],
+    ),
+  );
+}
+
+Widget _buildResponsiveTimeField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  required double fontSize,
+  required bool isDesktop,
+  required BuildContext context,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey.shade300),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: TextFormField(
+      controller: controller,
+      readOnly: true,
+      style: TextStyle(fontSize: fontSize),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(fontSize: fontSize * 0.9),
+        prefixIcon: Icon(
+          icon,
+          color: WegoColors.mainColor,
+          size: isDesktop ? 24 : 20,
+        ),
+        suffixIcon: Icon(
+          Icons.schedule,
+          color: WegoColors.mainColor,
+          size: isDesktop ? 20 : 18,
+        ),
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 16 : 12,
+          vertical: isDesktop ? 16 : 12,
+        ),
+      ),
+      onTap: () async {
+        TimeOfDay? pickedTime = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (pickedTime != null) {
+          // Format time as hh:mm:ss
+          String formattedTime =
+              '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}:00';
+          controller.text = formattedTime;
+        }
+      },
     ),
   );
 }
