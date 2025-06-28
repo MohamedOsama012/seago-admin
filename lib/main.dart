@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
 import 'package:sa7el/Cubit/authentication/auth_cubit.dart';
 import 'package:sa7el/Cubit/bloc_observer.dart';
@@ -15,8 +16,8 @@ import 'package:sa7el/views/Home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   Bloc.observer = MyBlocObserver();
-  await CacheHelper.init();
   DioHelper.init();
   Widget? startWidget;
   // CacheHelper.removeData(key: 'token');

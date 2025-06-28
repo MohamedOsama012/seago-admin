@@ -17,6 +17,7 @@ import 'package:sa7el/Cubit/Village/village_states.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sa7el/views/Home/Widgets/location_picker_widget.dart';
 
 // Helper function to show messages using custom overlay toast
 void _showMessage(BuildContext context, String message,
@@ -184,6 +185,9 @@ class VillageAddModel {
   }
 
   Map<String, dynamic> toApiData() {
+    print('=== VILLAGE ADD API DATA ===');
+    print('DEBUG: VillageAddModel.toApiData() started');
+
     Map<String, dynamic> data = {
       'name': name,
       'location': location,
@@ -192,17 +196,44 @@ class VillageAddModel {
       'status': status,
     };
 
+    print('DEBUG: name field = $name');
+    print('DEBUG: location field = $location');
+    print('DEBUG: description field = $description');
+    print('DEBUG: zone_id field = $zoneId');
+    print('DEBUG: status field = $status');
+
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
+      print('DEBUG: ar_name field = $arName');
+    } else {
+      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
+      print('DEBUG: ar_description field = $arDescription');
+    } else {
+      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
+      print(
+          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+    } else {
+      print('DEBUG: image field = EXCLUDED (no image)');
     }
+
+    print('DEBUG: Village ADD - Final API data:');
+    data.forEach((key, value) {
+      if (key == 'image') {
+        print(
+            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+      } else {
+        print('  $key: $value (${value.runtimeType})');
+      }
+    });
+    print('=== END VILLAGE ADD API DATA ===');
 
     return data;
   }
@@ -263,6 +294,9 @@ class MallAddModel {
   }
 
   Map<String, dynamic> toApiData() {
+    print('=== MALL ADD API DATA ===');
+    print('DEBUG: MallAddModel.toApiData() started');
+
     Map<String, dynamic> data = {
       'name': name,
       'description': description,
@@ -270,27 +304,59 @@ class MallAddModel {
       'status': status,
     };
 
+    print('DEBUG: name field = $name');
+    print('DEBUG: description field = $description');
+    print('DEBUG: zone_id field = $zoneId');
+    print('DEBUG: status field = $status');
+
     // Only include open_from if it has a value
     if (openFrom.isNotEmpty) {
       data['open_from'] = openFrom;
+      print('DEBUG: open_from field = $openFrom');
+    } else {
+      print('DEBUG: open_from field = EXCLUDED (empty)');
     }
 
     // Only include open_to if it has a value
     if (openTo.isNotEmpty) {
       data['open_to'] = openTo;
+      print('DEBUG: open_to field = $openTo');
+    } else {
+      print('DEBUG: open_to field = EXCLUDED (empty)');
     }
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
+      print('DEBUG: ar_name field = $arName');
+    } else {
+      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
+      print('DEBUG: ar_description field = $arDescription');
+    } else {
+      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
+      print(
+          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+    } else {
+      print('DEBUG: image field = EXCLUDED (no image)');
     }
+
+    print('DEBUG: Mall ADD - Final API data:');
+    data.forEach((key, value) {
+      if (key == 'image') {
+        print(
+            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+      } else {
+        print('  $key: $value (${value.runtimeType})');
+      }
+    });
+    print('=== END MALL ADD API DATA ===');
 
     return data;
   }
@@ -371,6 +437,7 @@ class ServiceProviderAddModel {
   }
 
   Map<String, dynamic> toApiData() {
+    print('=== SERVICE PROVIDER ADD API DATA ===');
     log('DEBUG: ServiceProviderAddModel.toApiData() - serviceId: $serviceId');
 
     Map<String, dynamic> data = {
@@ -381,44 +448,81 @@ class ServiceProviderAddModel {
       'status': status,
     };
 
+    print('DEBUG: service_id field = ${data['service_id']}');
+    print('DEBUG: name field = ${data['name']}');
+    print('DEBUG: description field = ${data['description']}');
+    print('DEBUG: phone field = ${data['phone']}');
+    print('DEBUG: status field = ${data['status']}');
+
     // Always include location
     data['location'] = location?.isNotEmpty == true ? location! : '';
+    print('DEBUG: location field = ${data['location']}');
 
     // Always include ar_name
     data['ar_name'] = arName?.isNotEmpty == true ? arName! : '';
+    print('DEBUG: ar_name field = ${data['ar_name']}');
 
     // Always include ar_description
     data['ar_description'] =
         arDescription?.isNotEmpty == true ? arDescription! : '';
+    print('DEBUG: ar_description field = ${data['ar_description']}');
 
     // Only include open_from if it has a value
     if (openFrom?.isNotEmpty == true) {
       data['open_from'] = openFrom!;
+      print('DEBUG: open_from field = ${data['open_from']}');
+    } else {
+      print('DEBUG: open_from field = EXCLUDED (empty or null)');
     }
 
     // Only include open_to if it has a value
     if (openTo?.isNotEmpty == true) {
       data['open_to'] = openTo!;
+      print('DEBUG: open_to field = ${data['open_to']}');
+    } else {
+      print('DEBUG: open_to field = EXCLUDED (empty or null)');
     }
 
     // Include village_id only if it has a valid value
     if (villageId != null && villageId! > 0) {
       data['village_id'] = villageId;
+      print('DEBUG: village_id field = ${data['village_id']}');
+    } else {
+      print('DEBUG: village_id field = EXCLUDED (null or 0)');
     }
 
     // Include zone_id only if it has a valid value
     if (zoneId != null && zoneId! > 0) {
       data['zone_id'] = zoneId;
+      print('DEBUG: zone_id field = ${data['zone_id']}');
+    } else {
+      print('DEBUG: zone_id field = EXCLUDED (null or 0)');
     }
 
     // Always provide location_map
     data['location_map'] = locationMap?.isNotEmpty == true
         ? locationMap!
-        : 'https://maps.google.com';
+        : 'https://maps.google.com/maps?q=24.7136,46.6753'; // Default to Riyadh
+    print('DEBUG: location_map field = ${data['location_map']}');
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
+      print(
+          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+    } else {
+      print('DEBUG: image field = EXCLUDED (no image)');
     }
+
+    print('DEBUG: ServiceProvider ADD - Final API data:');
+    data.forEach((key, value) {
+      if (key == 'image') {
+        print(
+            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+      } else {
+        print('  $key: $value (${value.runtimeType})');
+      }
+    });
+    print('=== END SERVICE PROVIDER ADD API DATA ===');
 
     return data;
   }
@@ -437,6 +541,7 @@ class MaintenanceProviderAddModel {
   final String? arDescription;
   final String? imageBase64;
   final int? villageId;
+  final String? locationMap;
 
   MaintenanceProviderAddModel({
     required this.name,
@@ -451,6 +556,7 @@ class MaintenanceProviderAddModel {
     this.arDescription,
     this.imageBase64,
     this.villageId,
+    this.locationMap,
   });
 
   static Future<MaintenanceProviderAddModel> fromFormData({
@@ -466,6 +572,7 @@ class MaintenanceProviderAddModel {
     String? arDescription,
     String? imagePath,
     int? villageId,
+    String? locationMap,
   }) async {
     String? imageBase64;
     if (imagePath != null && imagePath.isNotEmpty) {
@@ -487,10 +594,16 @@ class MaintenanceProviderAddModel {
           : null,
       imageBase64: imageBase64,
       villageId: villageId,
+      locationMap: locationMap?.trim(),
     );
   }
 
   Map<String, dynamic> toApiData() {
+    print('=== MAINTENANCE PROVIDER ADD API DATA ===');
+    print('DEBUG: MaintenanceProviderAddModel.toApiData() started');
+    print('DEBUG: maintenanceTypeId (in body): $maintenanceTypeId');
+    print('DEBUG: villageId (in body): $villageId');
+
     Map<String, dynamic> data = {
       'name': name,
       'description': description,
@@ -500,31 +613,74 @@ class MaintenanceProviderAddModel {
       'status': status,
     };
 
+    print('DEBUG: name field = $name');
+    print('DEBUG: description field = $description');
+    print('DEBUG: phone field = $phone');
+    print('DEBUG: location field = $location');
+    print('DEBUG: maintenance_type_id field = $maintenanceTypeId');
+    print('DEBUG: status field = $status');
+
     // Only include open_from if it has a value
     if (openFrom.isNotEmpty) {
       data['open_from'] = openFrom;
+      print('DEBUG: open_from field = $openFrom');
+    } else {
+      print('DEBUG: open_from field = EXCLUDED (empty)');
     }
 
     // Only include open_to if it has a value
     if (openTo.isNotEmpty) {
       data['open_to'] = openTo;
+      print('DEBUG: open_to field = $openTo');
+    } else {
+      print('DEBUG: open_to field = EXCLUDED (empty)');
     }
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
+      print('DEBUG: ar_name field = $arName');
+    } else {
+      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
+      print('DEBUG: ar_description field = $arDescription');
+    } else {
+      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (villageId != null && villageId! > 0) {
       data['village_id'] = villageId;
+      print('DEBUG: village_id field = $villageId');
+    } else {
+      print('DEBUG: village_id field = EXCLUDED (null or 0)');
     }
+
+    // Add location map handling
+    data['location_map'] = locationMap?.isNotEmpty == true
+        ? locationMap!
+        : 'https://maps.google.com/maps?q=24.7136,46.6753'; // Default to Riyadh
+    print('DEBUG: location_map field = ${data['location_map']}');
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
+      print(
+          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+    } else {
+      print('DEBUG: image field = EXCLUDED (no image)');
     }
+
+    print('DEBUG: MaintenanceProvider ADD - Final API data:');
+    data.forEach((key, value) {
+      if (key == 'image') {
+        print(
+            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+      } else {
+        print('  $key: $value (${value.runtimeType})');
+      }
+    });
+    print('=== END MAINTENANCE PROVIDER ADD API DATA ===');
 
     return data;
   }
@@ -602,6 +758,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController arDescriptionController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final TextEditingController locationMapController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController openFromController = TextEditingController();
   final TextEditingController openToController = TextEditingController();
@@ -714,13 +871,138 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
 
                           // Location - All entities except Mall
                           if (entityType != 'Mall') ...[
-                            _buildResponsiveTextField(
-                              controller: locationController,
-                              label: 'Location',
-                              icon: Icons.location_on,
-                              isRequired: true,
-                              fontSize: labelFontSize,
-                              isDesktop: isDesktop,
+                            // Location Picker Button
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isDesktop ? 16 : 12,
+                                vertical: isDesktop ? 16 : 14,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        color: WegoColors.mainColor,
+                                        size: isDesktop ? 24 : 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Location *',
+                                        style: TextStyle(
+                                          fontSize: labelFontSize,
+                                          fontWeight: FontWeight.w500,
+                                          color: WegoColors.mainColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    locationController.text.isNotEmpty
+                                        ? locationController.text
+                                        : 'Tap to select location on map',
+                                    style: TextStyle(
+                                      fontSize: labelFontSize - 1,
+                                      color: locationController.text.isNotEmpty
+                                          ? Colors.black87
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  if (locationMapController
+                                      .text.isNotEmpty) ...[
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Location Map Link: ${locationMapController.text}',
+                                      style: TextStyle(
+                                        fontSize: labelFontSize - 2,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                  SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed: () async {
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    LocationPickerWidget(
+                                                  initialLocation:
+                                                      locationController
+                                                              .text.isNotEmpty
+                                                          ? locationController
+                                                              .text
+                                                          : null,
+                                                  initialLocationMap:
+                                                      locationMapController
+                                                              .text.isNotEmpty
+                                                          ? locationMapController
+                                                              .text
+                                                          : null,
+                                                  onLocationSelected:
+                                                      (address, coordinates) {
+                                                    setState(() {
+                                                      locationController.text =
+                                                          address;
+                                                      locationMapController
+                                                          .text = coordinates;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          icon: Icon(
+                                            Icons.map,
+                                            size: isDesktop ? 20 : 18,
+                                          ),
+                                          label: Text(
+                                            'Select on Map',
+                                            style: TextStyle(
+                                                fontSize: labelFontSize - 1),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                WegoColors.mainColor,
+                                            foregroundColor: Colors.white,
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: isDesktop ? 20 : 16,
+                                              vertical: isDesktop ? 12 : 10,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if (locationController
+                                          .text.isNotEmpty) ...[
+                                        SizedBox(width: 8),
+                                        IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              locationController.clear();
+                                              locationMapController.clear();
+                                            });
+                                          },
+                                          icon: Icon(
+                                            Icons.clear,
+                                            color: Colors.red,
+                                            size: isDesktop ? 24 : 20,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                             SizedBox(height: verticalSpacing),
                           ],
@@ -1165,6 +1447,8 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                   openTo: openToController.text.trim(),
                                   zoneId: selectedZoneId,
                                   villageId: selectedVillageId,
+                                  locationMap:
+                                      locationMapController.text.trim(),
                                 );
                                 log('DEBUG: Service Provider Add - serviceId in model: ${addModel.serviceId}');
                                 await cubit.addData(addModel);
@@ -1188,6 +1472,8 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                       arDescriptionController.text.trim(),
                                   imagePath: imagePath,
                                   villageId: selectedVillageId,
+                                  locationMap:
+                                      locationMapController.text.trim(),
                                 );
                                 await cubit.addData(addModel);
                                 addSuccess = true;

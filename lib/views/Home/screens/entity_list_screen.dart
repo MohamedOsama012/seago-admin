@@ -14,6 +14,7 @@ import 'package:sa7el/Model/village_model.dart';
 import 'package:sa7el/Model/service_provider_model.dart';
 import 'package:sa7el/views/Home/Widgets/add_dialog_widget.dart';
 import 'package:sa7el/views/Home/Widgets/expandable_container_widget.dart';
+import 'package:sa7el/views/Home/Widgets/entity_filter_widget.dart';
 import 'package:sa7el/Cubit/maintenance_providers/maintenance_cubit.dart';
 import 'package:sa7el/Cubit/malls/malls_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
@@ -39,9 +40,16 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
   // Track which cards are expanded using their index
   final Set<int> _expandedCards = <int>{};
 
-  // Search functionality
-  final TextEditingController _searchController = TextEditingController();
-  bool _isSearchActive = false;
+  // Filter functionality
+  FilterState _filterState = const FilterState();
+
+  EntityType _getEntityType() {
+    if (widget.cubit is VillageCubit) return EntityType.village;
+    if (widget.cubit is MallsCubit) return EntityType.mall;
+    if (widget.cubit is ServiceProviderCubit) return EntityType.serviceProvider;
+    if (widget.cubit is MaintenanceCubit) return EntityType.maintenanceProvider;
+    throw Exception('Unknown cubit type: ${widget.cubit.runtimeType}');
+  }
 
   bool _isLoadingState(S state) {
     return state is MallsGetDataLoadingState ||
@@ -107,94 +115,112 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
     });
   }
 
-  void _performSearch(String query, C cubit) {
-    if (query.isEmpty) {
-      _clearSearch(cubit);
-      return;
-    }
-
-    if (cubit is VillageCubit) {
-      (cubit as VillageCubit).searchVillages(query);
-    } else if (cubit is MaintenanceCubit) {
-      (cubit as MaintenanceCubit).searchProviders(query);
-    } else if (cubit is MallsCubit) {
-      (cubit as MallsCubit).searchMalls(query);
-    } else if (cubit is ServiceProviderCubit) {
-      // Implement local search for ServiceProviderCubit
-      _localSearchServiceProviders(query, cubit as ServiceProviderCubit);
-    }
-  }
-
-  void _localSearchServiceProviders(String query, ServiceProviderCubit cubit) {
-    // This is a local implementation since ServiceProviderCubit doesn't have search method
-    // We don't trigger any state changes, just update display
+  void _onFiltersChanged(FilterState newFilters) {
     setState(() {
-      // The search will be handled in the UI by filtering cubit.items
+      _filterState = newFilters;
     });
   }
 
-  // Get the appropriate items list based on cubit type and current state
-  List<dynamic> _getDisplayItems(C cubit) {
-    if (cubit is VillageCubit) {
-      final villageCubit = cubit as VillageCubit;
-      // Use filteredVillages if available, otherwise use items
-      return villageCubit.filteredVillages.isNotEmpty || _isSearchActive
-          ? villageCubit.filteredVillages
-          : villageCubit.items;
-    } else if (cubit is MaintenanceCubit) {
-      final maintenanceCubit = cubit as MaintenanceCubit;
-      // Use filteredProviders if available, otherwise use items
-      return maintenanceCubit.filteredProviders.isNotEmpty || _isSearchActive
-          ? maintenanceCubit.filteredProviders
-          : maintenanceCubit.items;
-    } else if (cubit is MallsCubit) {
-      final mallsCubit = cubit as MallsCubit;
-      // Use filteredMalls if available, otherwise use items
-      return mallsCubit.filteredMalls.isNotEmpty || _isSearchActive
-          ? mallsCubit.filteredMalls
-          : mallsCubit.items;
-    } else if (cubit is ServiceProviderCubit) {
-      final serviceProviderCubit = cubit as ServiceProviderCubit;
-      // Implement local filtering for ServiceProviderCubit
-      if (_isSearchActive && _searchController.text.isNotEmpty) {
-        final query = _searchController.text.toLowerCase();
-        return serviceProviderCubit.items.where((provider) {
-          final name = provider.name?.toLowerCase() ?? '';
-          final description = provider.description?.toLowerCase() ?? '';
-          final phone = provider.phone?.toLowerCase() ?? '';
-          final serviceName = provider.service?.name?.toLowerCase() ?? '';
+  // Get the appropriate items list based on cubit type and applied filters
+  List<dynamic> _getFilteredItems(C cubit) {
+    List<dynamic> items;
 
-          return name.contains(query) ||
-              description.contains(query) ||
-              phone.contains(query) ||
-              serviceName.contains(query);
-        }).toList();
-      }
-      return serviceProviderCubit.items;
+    // Get base items from cubit
+    if (cubit is VillageCubit) {
+      items = (cubit as VillageCubit).items;
+    } else if (cubit is MaintenanceCubit) {
+      items = (cubit as MaintenanceCubit).items;
+    } else if (cubit is MallsCubit) {
+      items = (cubit as MallsCubit).items;
+    } else if (cubit is ServiceProviderCubit) {
+      items = (cubit as ServiceProviderCubit).items;
+    } else {
+      items = cubit.items;
     }
 
-    // Fallback to items if no specific handling
-    return cubit.items;
+    // Apply filters
+    return _applyFilters(items);
   }
 
-  void _clearSearch(C cubit) {
-    if (cubit is VillageCubit) {
-      (cubit as VillageCubit).clearFilter();
-    } else if (cubit is MaintenanceCubit) {
-      (cubit as MaintenanceCubit).clearFilter();
-    } else if (cubit is MallsCubit) {
-      (cubit as MallsCubit).resetFilters();
-    } else if (cubit is ServiceProviderCubit) {
-      // For ServiceProvider, just trigger a setState to refresh UI
-      setState(() {
-        // This will reset the local filtering
-      });
+  List<dynamic> _applyFilters(List<dynamic> items) {
+    if (!_filterState.hasActiveFilters) {
+      return items;
     }
+
+    return items.where((item) {
+      // Apply search filter
+      if (_filterState.searchQuery.isNotEmpty) {
+        final query = _filterState.searchQuery.toLowerCase();
+        final name = (item.name ?? '').toLowerCase();
+        final description = (item.description ?? '').toLowerCase();
+
+        bool matchesSearch =
+            name.contains(query) || description.contains(query);
+
+        // Add entity-specific search fields
+        if (item is ServiceProviderModel) {
+          final phone = (item.phone ?? '').toLowerCase();
+          final serviceName = (item.service?.name ?? '').toLowerCase();
+          matchesSearch = matchesSearch ||
+              phone.contains(query) ||
+              serviceName.contains(query);
+        } else if (item is Providers) {
+          final phone = (item.phone ?? '').toLowerCase();
+          matchesSearch = matchesSearch || phone.contains(query);
+        } else if (item is Villages) {
+          final location = (item.location ?? '').toLowerCase();
+          matchesSearch = matchesSearch || location.contains(query);
+        }
+
+        if (!matchesSearch) return false;
+      }
+
+      // Apply status filter
+      if (_filterState.statusFilter != null) {
+        final itemStatus = item.status;
+        if (itemStatus != _filterState.statusFilter) return false;
+      }
+
+      // Apply zone filter
+      if (_filterState.zoneFilter != null) {
+        final itemZoneId = item is Villages
+            ? item.zoneId?.toInt()
+            : item is MallModel
+                ? item.zoneId?.toInt()
+                : item is ServiceProviderModel
+                    ? item.zoneId?.toInt()
+                    : null;
+        if (itemZoneId != _filterState.zoneFilter) return false;
+      }
+
+      // Apply village filter
+      if (_filterState.villageFilter != null) {
+        final itemVillageId = item is ServiceProviderModel
+            ? item.villageId?.toInt()
+            : item is Providers
+                ? item.villageId?.toInt()
+                : null;
+        if (itemVillageId != _filterState.villageFilter) return false;
+      }
+
+      // Apply service type filter
+      if (_filterState.serviceTypeFilter != null &&
+          item is ServiceProviderModel) {
+        if (item.service?.id != _filterState.serviceTypeFilter) return false;
+      }
+
+      // Apply maintenance type filter
+      if (_filterState.maintenanceTypeFilter != null && item is Providers) {
+        if (item.maintenanceTypeId?.toInt() !=
+            _filterState.maintenanceTypeFilter) return false;
+      }
+
+      return true;
+    }).toList();
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -227,35 +253,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
               elevation: 0,
               scrolledUnderElevation: 0,
               backgroundColor: Colors.white,
-              title: _isSearchActive
-                  ? TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: 'Search ${widget.title.toLowerCase()}...',
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(color: Colors.grey),
-                      ),
-                      style: TextStyle(color: Colors.black, fontSize: 16),
-                      onChanged: (value) {
-                        _performSearch(value, context.read<C>());
-                      },
-                    )
-                  : Text(widget.title),
-              actions: [
-                IconButton(
-                  icon: Icon(_isSearchActive ? Icons.close : Icons.search),
-                  onPressed: () {
-                    setState(() {
-                      _isSearchActive = !_isSearchActive;
-                      if (!_isSearchActive) {
-                        _searchController.clear();
-                        _clearSearch(context.read<C>());
-                      }
-                    });
-                  },
-                ),
-              ],
+              title: Text(widget.title),
             ),
             body: Builder(
               builder: (context) {
@@ -270,150 +268,197 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                 if (_isSuccessState(state)) {
                   final cubit = context.read<C>();
 
-                  // Get the appropriate items list (filtered or all items)
-                  List<dynamic> items = _getDisplayItems(cubit);
-
-                  if (items.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.inbox, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                              _isSearchActive
-                                  ? 'No search results found'
-                                  : 'No items found',
-                              style: TextStyle(fontSize: 18)),
-                          if (_isSearchActive) ...[
-                            SizedBox(height: 8),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isSearchActive = false;
-                                  _searchController.clear();
-                                });
-                                _clearSearch(cubit);
-                              },
-                              child: Text('Clear search'),
-                            ),
-                          ],
-                        ],
+                  return Column(
+                    children: [
+                      // Filter Widget
+                      EntityFilterWidget(
+                        entityType: _getEntityType(),
+                        initialFilters: _filterState,
+                        onFiltersChanged: _onFiltersChanged,
+                        cubit: cubit,
                       ),
-                    );
-                  }
-                  return RefreshIndicator(
-                    color: WegoColors.mainColor,
-                    onRefresh: () => context.read<C>().getData(),
-                    child: ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        final isExpanded = _expandedCards.contains(index);
-                        if (item is MallModel) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: GestureDetector(
-                              onTap: () => _toggleCardExpansion(index),
-                              child: ExpandableCard<MallItem>(
-                                item: MallItem(item),
-                                index: index,
-                                isGrid: false,
-                                isTablet:
-                                    MediaQuery.of(context).size.width > 600,
-                                isDesktop:
-                                    MediaQuery.of(context).size.width > 1024,
-                                isExpanded: isExpanded,
-                                itemTypeName: 'Mall',
-                                onEdit: (mallItem) {
-                                  showEditDialog(context, item, cubit);
-                                },
-                                onDelete: (mallItem) async {
-                                  cubit.deleteData(item.id);
+
+                      // Content
+                      Expanded(
+                        child: Builder(
+                          builder: (context) {
+                            // Get the appropriate items list (filtered or all items)
+                            List<dynamic> items = _getFilteredItems(cubit);
+
+                            if (items.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.inbox,
+                                        size: 64, color: Colors.grey),
+                                    SizedBox(height: 16),
+                                    Text(
+                                        _filterState.hasActiveFilters
+                                            ? 'No items match your filters'
+                                            : 'No items found',
+                                        style: TextStyle(fontSize: 18)),
+                                    if (_filterState.hasActiveFilters) ...[
+                                      SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          _onFiltersChanged(
+                                              const FilterState());
+                                        },
+                                        child: Text('Clear filters'),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            }
+
+                            return RefreshIndicator(
+                              color: WegoColors.mainColor,
+                              onRefresh: () => context.read<C>().getData(),
+                              child: ListView.builder(
+                                itemCount: items.length,
+                                itemBuilder: (context, index) {
+                                  final item = items[index];
+                                  final isExpanded =
+                                      _expandedCards.contains(index);
+                                  if (item is MallModel) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _toggleCardExpansion(index),
+                                        child: ExpandableCard<MallItem>(
+                                          item: MallItem(item),
+                                          index: index,
+                                          isGrid: false,
+                                          isTablet: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              600,
+                                          isDesktop: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              1024,
+                                          isExpanded: isExpanded,
+                                          itemTypeName: 'Mall',
+                                          onEdit: (mallItem) {
+                                            showEditDialog(
+                                                context, item, cubit);
+                                          },
+                                          onDelete: (mallItem) async {
+                                            cubit.deleteData(item.id);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  } else if (item is Villages) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _toggleCardExpansion(index),
+                                        child: ExpandableCard<VillageItem>(
+                                          item: VillageItem(item),
+                                          index: index,
+                                          isGrid: false,
+                                          isTablet: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              600,
+                                          isDesktop: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              1024,
+                                          isExpanded: isExpanded,
+                                          itemTypeName: 'Village',
+                                          onEdit: (villageItem) {
+                                            showEditDialog(
+                                                context, item, cubit);
+                                          },
+                                          onDelete: (villageItem) async {
+                                            cubit.deleteData(item.id!);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  } else if (item is ServiceProviderModel) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _toggleCardExpansion(index),
+                                        child:
+                                            ExpandableCard<ServiceProviderItem>(
+                                          item: ServiceProviderItem(item),
+                                          index: index,
+                                          isGrid: false,
+                                          isTablet: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              600,
+                                          isDesktop: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              1024,
+                                          isExpanded: isExpanded,
+                                          itemTypeName: 'Service Provider',
+                                          onEdit: (serviceProviderItem) {
+                                            showEditDialog(
+                                                context, item, cubit);
+                                          },
+                                          onDelete:
+                                              (serviceProviderItem) async {
+                                            cubit.deleteData(item.id);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  } else if (item is Providers) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _toggleCardExpansion(index),
+                                        child: ExpandableCard<
+                                            MaintenanceProviderItem>(
+                                          item: MaintenanceProviderItem(item),
+                                          index: index,
+                                          isGrid: false,
+                                          isTablet: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              600,
+                                          isDesktop: MediaQuery.of(context)
+                                                  .size
+                                                  .width >
+                                              1024,
+                                          isExpanded: isExpanded,
+                                          itemTypeName: 'Maintenance Provider',
+                                          onEdit: (serviceProviderItem) {
+                                            showEditDialog(
+                                                context, item, cubit);
+                                          },
+                                          onDelete:
+                                              (serviceProviderItem) async {
+                                            cubit.deleteData(item.id!);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return null;
                                 },
                               ),
-                            ),
-                          );
-                        } else if (item is Villages) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: GestureDetector(
-                              onTap: () => _toggleCardExpansion(index),
-                              child: ExpandableCard<VillageItem>(
-                                item: VillageItem(item),
-                                index: index,
-                                isGrid: false,
-                                isTablet:
-                                    MediaQuery.of(context).size.width > 600,
-                                isDesktop:
-                                    MediaQuery.of(context).size.width > 1024,
-                                isExpanded: isExpanded,
-                                itemTypeName: 'Village',
-                                onEdit: (villageItem) {
-                                  showEditDialog(context, item, cubit);
-                                },
-                                onDelete: (villageItem) async {
-                                  cubit.deleteData(item.id!);
-                                },
-                              ),
-                            ),
-                          );
-                        } else if (item is ServiceProviderModel) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: GestureDetector(
-                              onTap: () => _toggleCardExpansion(index),
-                              child: ExpandableCard<ServiceProviderItem>(
-                                item: ServiceProviderItem(item),
-                                index: index,
-                                isGrid: false,
-                                isTablet:
-                                    MediaQuery.of(context).size.width > 600,
-                                isDesktop:
-                                    MediaQuery.of(context).size.width > 1024,
-                                isExpanded: isExpanded,
-                                itemTypeName: 'Service Provider',
-                                onEdit: (serviceProviderItem) {
-                                  showEditDialog(context, item, cubit);
-                                },
-                                onDelete: (serviceProviderItem) async {
-                                  cubit.deleteData(item.id);
-                                },
-                              ),
-                            ),
-                          );
-                        } else if (item is Providers) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: GestureDetector(
-                              onTap: () => _toggleCardExpansion(index),
-                              child: ExpandableCard<MaintenanceProviderItem>(
-                                item: MaintenanceProviderItem(item),
-                                index: index,
-                                isGrid: false,
-                                isTablet:
-                                    MediaQuery.of(context).size.width > 600,
-                                isDesktop:
-                                    MediaQuery.of(context).size.width > 1024,
-                                isExpanded: isExpanded,
-                                itemTypeName: 'Maintenance Provider',
-                                onEdit: (serviceProviderItem) {
-                                  showEditDialog(context, item, cubit);
-                                },
-                                onDelete: (serviceProviderItem) async {
-                                  cubit.deleteData(item.id!);
-                                },
-                              ),
-                            ),
-                          );
-                        }
-                        return null;
-                      },
-                    ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 }
                 return Center(child: Text('No data'));

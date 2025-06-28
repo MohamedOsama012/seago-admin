@@ -264,6 +264,7 @@ class Providers {
     this.translations,
     this.maintenance,
     this.package,
+    this.locationMap,
   });
 
   Providers.fromJson(dynamic json) {
@@ -288,6 +289,7 @@ class Providers {
     arName = json['ar_name'];
     arDescription = json['ar_description'];
     coverImageLink = json['cover_image_link'];
+    locationMap = json['location_map'];
     if (json['translations'] != null) {
       translations = [];
       json['translations'].forEach((v) {
@@ -324,6 +326,7 @@ class Providers {
   List<Translations>? translations;
   Maintenance? maintenance;
   Package? package;
+  String? locationMap;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -348,6 +351,7 @@ class Providers {
     map['ar_name'] = arName;
     map['ar_description'] = arDescription;
     map['cover_image_link'] = coverImageLink;
+    map['location_map'] = locationMap;
     if (translations != null) {
       map['translations'] = translations?.map((v) => v.toJson()).toList();
     }
