@@ -16,7 +16,7 @@ import 'package:sa7el/views/Home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await CacheHelper.init();
   Bloc.observer = MyBlocObserver();
   DioHelper.init();
   Widget? startWidget;
