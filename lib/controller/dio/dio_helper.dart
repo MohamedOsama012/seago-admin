@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 
 class DioHelper {
@@ -26,11 +28,10 @@ class DioHelper {
       'Authorization': 'Bearer $token',
     };
 
-
     final uri = Uri.parse(
       dio.options.baseUrl + url,
     ).replace(queryParameters: query);
-    print('🔗 Full Request URL: $uri');
+    log('🔗 Full Request URL: $uri');
 
     return await dio.get(url, queryParameters: query);
   }
@@ -42,16 +43,15 @@ class DioHelper {
     String? token,
   }) async {
     dio.options.headers = {
-      'Content-Type': data is FormData
-          ? 'multipart/form-data'
-          : 'application/json',
+      'Content-Type':
+          data is FormData ? 'multipart/form-data' : 'application/json',
       'Authorization': 'Bearer $token',
     };
 
     final uri = Uri.parse(
       dio.options.baseUrl + url,
     ).replace(queryParameters: query);
-    print('🔗 Full Request URL: $uri');
+    log('🔗 Full Request URL: $uri');
 
     return await dio.post(url, data: data, queryParameters: query);
   }
@@ -69,7 +69,7 @@ class DioHelper {
     final uri = Uri.parse(
       dio.options.baseUrl + url,
     ).replace(queryParameters: query);
-    print('🔗 Full Request URL: $uri');
+    log('🔗 Full Request URL: $uri');
     return await dio.put(url, data: data, queryParameters: query);
   }
 

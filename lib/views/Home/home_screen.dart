@@ -14,6 +14,7 @@ import 'package:sa7el/Cubit/malls/malls_states.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
 import 'package:sa7el/views/Home/screens/entity_list_screen.dart';
+import 'package:sa7el/views/Authentication/login_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text('Error loading user data: ${state.errMessage}'),
                     backgroundColor: Colors.red,
                   ),
+                );
+              } else if (state is AuthenticationLogoutState) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
                 );
               }
             },
@@ -156,6 +162,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         );
                       },
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () {
+                        _showLogoutDialog(context);
+                      },
+                      icon: const Icon(
+                        Icons.logout,
+                        color: WegoColors.mainColor,
+                      ),
+                      tooltip: 'Logout',
                     ),
                   ],
                 ),
@@ -538,5 +555,48 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _navigateTo(
       BuildContext context, MaterialPageRoute destination) async {
     await Navigator.of(context).push(destination);
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlocBuilder<AuthenticationCubit, AuthenticationStates>(
+          builder: (context, state) {
+            final isLoggingOut = state is AuthenticationLoginStateLoading;
+
+            return AlertDialog(
+              title: const Text('Logout'),
+              content: isLoggingOut
+                  ? const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(width: 16),
+                        Text('Logging out...'),
+                      ],
+                    )
+                  : const Text('Are you sure you want to logout?'),
+              actions: isLoggingOut
+                  ? null
+                  : [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          context.read<AuthenticationCubit>().logout();
+                        },
+                        child: const Text('Logout'),
+                      ),
+                    ],
+            );
+          },
+        );
+      },
+    );
   }
 }

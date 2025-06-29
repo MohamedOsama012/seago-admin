@@ -629,7 +629,7 @@ void showVillageEditDialog(
                 color: WegoColors.mainColor,
               ),
             ),
-            content: Container(
+            content: SizedBox(
               width: MediaQuery.of(context).size.width * 0.9,
               height: MediaQuery.of(context).size.height * 0.7,
               child: SingleChildScrollView(
@@ -1922,7 +1922,7 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
                                               fontSize: labelFontSize),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (value) {
                                     setState(() {
@@ -1964,7 +1964,7 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
                                               fontSize: labelFontSize),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (value) {
                                     setState(() {
@@ -2051,7 +2051,7 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
                                               fontSize: labelFontSize),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (value) {
                                     setState(() {

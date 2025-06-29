@@ -17,6 +17,8 @@ class AuthenticationLoginStateFailed extends AuthenticationStates {
 
 class AuthenticationLoginStateLoading extends AuthenticationStates {}
 
+class AuthenticationLogoutState extends AuthenticationStates {}
+
 class AuthenticationUserModel extends AuthenticationStates {
   final UserModel? userModel;
   AuthenticationUserModel(this.userModel);

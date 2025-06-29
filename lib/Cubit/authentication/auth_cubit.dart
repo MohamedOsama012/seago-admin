@@ -49,11 +49,48 @@ class AuthenticationCubit extends Cubit<AuthenticationStates> {
     }
   }
 
-  /// Logs the user out by clearing the state.
-  void logout() {
-    _adminModel = null;
-    CacheHelper.removeData(key: 'token');
-    emit(AuthenticationLoginStateInitial());
+  /// Logs the user out by calling the API and clearing the state.
+  Future<void> logout() async {
+    emit(AuthenticationLoginStateLoading());
+
+    try {
+      final token = CacheHelper.getData(key: 'token');
+
+      // Call the logout API endpoint
+      await DioHelper.getData(
+        url: WegoEndPoints.logoutEndPoint,
+        token: token,
+      );
+
+      // Clear local data after successful API call
+      _adminModel = null;
+      userModel = null;
+      await CacheHelper.removeData(key: 'token');
+
+      emit(AuthenticationLogoutState());
+    } on DioException catch (dioError) {
+      // Even if API call fails, clear local data for security
+      _adminModel = null;
+      userModel = null;
+      await CacheHelper.removeData(key: 'token');
+
+      emit(AuthenticationLogoutState());
+
+      if (kDebugMode) {
+        print('Logout API error: ${_handleDioError(dioError)}');
+      }
+    } catch (error) {
+      // Even if API call fails, clear local data for security
+      _adminModel = null;
+      userModel = null;
+      await CacheHelper.removeData(key: 'token');
+
+      emit(AuthenticationLogoutState());
+
+      if (kDebugMode) {
+        print('Logout unexpected error: ${error.toString()}');
+      }
+    }
   }
 
   /// Handles various Dio exceptions and maps them to readable messages.

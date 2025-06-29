@@ -29,9 +29,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocConsumer<AuthenticationCubit, AuthenticationStates>(
       listener: (context, state) {
         if (state is AuthenticationLoginStatesuccess) {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (context) => const HomeScreen()));
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
         } else if (state is AuthenticationLoginStateFailed) {
           customSnackBar(context: context, message: state.errMessage);
         }

@@ -22,4 +22,5 @@ abstract class WegoEndPoints {
   static const String deleteServiceProviderEndPoint = "/admin/provider/delete/";
   static const String updateServiceProviderEndPoint = "/admin/provider/update";
   static const String adminDataEndPoint = "/admin/profile";
+  static const String logoutEndPoint = "/api/logout";
 }
