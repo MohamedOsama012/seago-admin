@@ -1,22 +1,21 @@
-import 'dart:developer';
 import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:sa7el/Core/colors.dart';
-import 'package:sa7el/Model/village_model.dart';
-import 'package:sa7el/Model/malls_model.dart';
-import 'package:sa7el/Model/service_provider_model.dart';
-import 'package:sa7el/Model/maintenance_provider_model.dart';
-import 'package:sa7el/Model/maintenance_model.dart' show Providers;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:sa7el/Core/colors.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
 import 'package:sa7el/Cubit/Village/village_states.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sa7el/Model/maintenance_model.dart' show Providers;
+import 'package:sa7el/Model/malls_model.dart';
+import 'package:sa7el/Model/service_provider_model.dart';
+import 'package:sa7el/Model/village_model.dart';
 import 'package:sa7el/views/Home/Widgets/location_picker_widget.dart';
 
 // Helper function to show messages using custom overlay toast
@@ -85,7 +84,7 @@ Future<String?> _pickImage() async {
     );
     return image?.path;
   } catch (e) {
-    print('Error picking image: $e');
+    log('Error picking image: $e');
     return null;
   }
 }
@@ -93,31 +92,31 @@ Future<String?> _pickImage() async {
 // Helper function to convert image file to base64 string
 Future<String?> _convertImageToBase64(String imagePath) async {
   try {
-    print('DEBUG: Starting base64 conversion for: $imagePath');
+    log('DEBUG: Starting base64 conversion for: $imagePath');
     File imageFile = File(imagePath);
-    print('DEBUG: File object created');
+    log('DEBUG: File object created');
 
     bool exists = await imageFile.exists();
-    print('DEBUG: File exists: $exists');
+    log('DEBUG: File exists: $exists');
 
     if (exists) {
-      print('DEBUG: Reading file bytes...');
+      log('DEBUG: Reading file bytes...');
       Uint8List imageBytes = await imageFile.readAsBytes();
-      print('DEBUG: File bytes read, length: ${imageBytes.length}');
+      log('DEBUG: File bytes read, length: ${imageBytes.length}');
 
       String base64String = base64Encode(imageBytes);
-      print('DEBUG: Base64 encoded, length: ${base64String.length}');
+      log('DEBUG: Base64 encoded, length: ${base64String.length}');
       final formattedBase64 = _ensureDataUrlPrefix(base64String);
-      print('DEBUG: Full base64 string with prefix: $formattedBase64');
+      log('DEBUG: Full base64 string with prefix: $formattedBase64');
 
       return formattedBase64;
     } else {
-      print('ERROR: Image file does not exist: $imagePath');
+      log('ERROR: Image file does not exist: $imagePath');
       return null;
     }
   } catch (e) {
-    print('ERROR: Converting image to base64: $e');
-    print('ERROR: Stack trace: ${StackTrace.current}');
+    log('ERROR: Converting image to base64: $e');
+    log('ERROR: Stack trace: ${StackTrace.current}');
     return null;
   }
 }
@@ -185,8 +184,8 @@ class VillageAddModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== VILLAGE ADD API DATA ===');
-    print('DEBUG: VillageAddModel.toApiData() started');
+    log('=== VILLAGE ADD API DATA ===');
+    log('DEBUG: VillageAddModel.toApiData() started');
 
     Map<String, dynamic> data = {
       'name': name,
@@ -196,44 +195,42 @@ class VillageAddModel {
       'status': status,
     };
 
-    print('DEBUG: name field = $name');
-    print('DEBUG: location field = $location');
-    print('DEBUG: description field = $description');
-    print('DEBUG: zone_id field = $zoneId');
-    print('DEBUG: status field = $status');
+    log('DEBUG: name field = $name');
+    log('DEBUG: location field = $location');
+    log('DEBUG: description field = $description');
+    log('DEBUG: zone_id field = $zoneId');
+    log('DEBUG: status field = $status');
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
-      print('DEBUG: ar_name field = $arName');
+      log('DEBUG: ar_name field = $arName');
     } else {
-      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
-      print('DEBUG: ar_description field = $arDescription');
+      log('DEBUG: ar_description field = $arDescription');
     } else {
-      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print('DEBUG: image field = EXCLUDED (no image)');
+      log('DEBUG: image field = EXCLUDED (no image)');
     }
 
-    print('DEBUG: Village ADD - Final API data:');
+    log('DEBUG: Village ADD - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END VILLAGE ADD API DATA ===');
+    log('=== END VILLAGE ADD API DATA ===');
 
     return data;
   }
@@ -294,8 +291,8 @@ class MallAddModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== MALL ADD API DATA ===');
-    print('DEBUG: MallAddModel.toApiData() started');
+    log('=== MALL ADD API DATA ===');
+    log('DEBUG: MallAddModel.toApiData() started');
 
     Map<String, dynamic> data = {
       'name': name,
@@ -304,59 +301,57 @@ class MallAddModel {
       'status': status,
     };
 
-    print('DEBUG: name field = $name');
-    print('DEBUG: description field = $description');
-    print('DEBUG: zone_id field = $zoneId');
-    print('DEBUG: status field = $status');
+    log('DEBUG: name field = $name');
+    log('DEBUG: description field = $description');
+    log('DEBUG: zone_id field = $zoneId');
+    log('DEBUG: status field = $status');
 
     // Only include open_from if it has a value
     if (openFrom.isNotEmpty) {
       data['open_from'] = openFrom;
-      print('DEBUG: open_from field = $openFrom');
+      log('DEBUG: open_from field = $openFrom');
     } else {
-      print('DEBUG: open_from field = EXCLUDED (empty)');
+      log('DEBUG: open_from field = EXCLUDED (empty)');
     }
 
     // Only include open_to if it has a value
     if (openTo.isNotEmpty) {
       data['open_to'] = openTo;
-      print('DEBUG: open_to field = $openTo');
+      log('DEBUG: open_to field = $openTo');
     } else {
-      print('DEBUG: open_to field = EXCLUDED (empty)');
+      log('DEBUG: open_to field = EXCLUDED (empty)');
     }
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
-      print('DEBUG: ar_name field = $arName');
+      log('DEBUG: ar_name field = $arName');
     } else {
-      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
-      print('DEBUG: ar_description field = $arDescription');
+      log('DEBUG: ar_description field = $arDescription');
     } else {
-      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print('DEBUG: image field = EXCLUDED (no image)');
+      log('DEBUG: image field = EXCLUDED (no image)');
     }
 
-    print('DEBUG: Mall ADD - Final API data:');
+    log('DEBUG: Mall ADD - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END MALL ADD API DATA ===');
+    log('=== END MALL ADD API DATA ===');
 
     return data;
   }
@@ -437,7 +432,7 @@ class ServiceProviderAddModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== SERVICE PROVIDER ADD API DATA ===');
+    log('=== SERVICE PROVIDER ADD API DATA ===');
     log('DEBUG: ServiceProviderAddModel.toApiData() - serviceId: $serviceId');
 
     Map<String, dynamic> data = {
@@ -448,81 +443,79 @@ class ServiceProviderAddModel {
       'status': status,
     };
 
-    print('DEBUG: service_id field = ${data['service_id']}');
-    print('DEBUG: name field = ${data['name']}');
-    print('DEBUG: description field = ${data['description']}');
-    print('DEBUG: phone field = ${data['phone']}');
-    print('DEBUG: status field = ${data['status']}');
+    log('DEBUG: service_id field = ${data['service_id']}');
+    log('DEBUG: name field = ${data['name']}');
+    log('DEBUG: description field = ${data['description']}');
+    log('DEBUG: phone field = ${data['phone']}');
+    log('DEBUG: status field = ${data['status']}');
 
     // Always include location
     data['location'] = location?.isNotEmpty == true ? location! : '';
-    print('DEBUG: location field = ${data['location']}');
+    log('DEBUG: location field = ${data['location']}');
 
     // Always include ar_name
     data['ar_name'] = arName?.isNotEmpty == true ? arName! : '';
-    print('DEBUG: ar_name field = ${data['ar_name']}');
+    log('DEBUG: ar_name field = ${data['ar_name']}');
 
     // Always include ar_description
     data['ar_description'] =
         arDescription?.isNotEmpty == true ? arDescription! : '';
-    print('DEBUG: ar_description field = ${data['ar_description']}');
+    log('DEBUG: ar_description field = ${data['ar_description']}');
 
     // Only include open_from if it has a value
     if (openFrom?.isNotEmpty == true) {
       data['open_from'] = openFrom!;
-      print('DEBUG: open_from field = ${data['open_from']}');
+      log('DEBUG: open_from field = ${data['open_from']}');
     } else {
-      print('DEBUG: open_from field = EXCLUDED (empty or null)');
+      log('DEBUG: open_from field = EXCLUDED (empty or null)');
     }
 
     // Only include open_to if it has a value
     if (openTo?.isNotEmpty == true) {
       data['open_to'] = openTo!;
-      print('DEBUG: open_to field = ${data['open_to']}');
+      log('DEBUG: open_to field = ${data['open_to']}');
     } else {
-      print('DEBUG: open_to field = EXCLUDED (empty or null)');
+      log('DEBUG: open_to field = EXCLUDED (empty or null)');
     }
 
     // Include village_id only if it has a valid value
     if (villageId != null && villageId! > 0) {
       data['village_id'] = villageId;
-      print('DEBUG: village_id field = ${data['village_id']}');
+      log('DEBUG: village_id field = ${data['village_id']}');
     } else {
-      print('DEBUG: village_id field = EXCLUDED (null or 0)');
+      log('DEBUG: village_id field = EXCLUDED (null or 0)');
     }
 
     // Include zone_id only if it has a valid value
     if (zoneId != null && zoneId! > 0) {
       data['zone_id'] = zoneId;
-      print('DEBUG: zone_id field = ${data['zone_id']}');
+      log('DEBUG: zone_id field = ${data['zone_id']}');
     } else {
-      print('DEBUG: zone_id field = EXCLUDED (null or 0)');
+      log('DEBUG: zone_id field = EXCLUDED (null or 0)');
     }
 
     // Always provide location_map
     data['location_map'] = locationMap?.isNotEmpty == true
         ? locationMap!
         : 'https://maps.google.com/maps?q=24.7136,46.6753'; // Default to Riyadh
-    print('DEBUG: location_map field = ${data['location_map']}');
+    log('DEBUG: location_map field = ${data['location_map']}');
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print('DEBUG: image field = EXCLUDED (no image)');
+      log('DEBUG: image field = EXCLUDED (no image)');
     }
 
-    print('DEBUG: ServiceProvider ADD - Final API data:');
+    log('DEBUG: ServiceProvider ADD - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END SERVICE PROVIDER ADD API DATA ===');
+    log('=== END SERVICE PROVIDER ADD API DATA ===');
 
     return data;
   }
@@ -599,10 +592,10 @@ class MaintenanceProviderAddModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== MAINTENANCE PROVIDER ADD API DATA ===');
-    print('DEBUG: MaintenanceProviderAddModel.toApiData() started');
-    print('DEBUG: maintenanceTypeId (in body): $maintenanceTypeId');
-    print('DEBUG: villageId (in body): $villageId');
+    log('=== MAINTENANCE PROVIDER ADD API DATA ===');
+    log('DEBUG: MaintenanceProviderAddModel.toApiData() started');
+    log('DEBUG: maintenanceTypeId (in body): $maintenanceTypeId');
+    log('DEBUG: villageId (in body): $villageId');
 
     Map<String, dynamic> data = {
       'name': name,
@@ -613,82 +606,80 @@ class MaintenanceProviderAddModel {
       'status': status,
     };
 
-    print('DEBUG: name field = $name');
-    print('DEBUG: description field = $description');
-    print('DEBUG: phone field = $phone');
-    print('DEBUG: location field = $location');
-    print('DEBUG: maintenance_type_id field = $maintenanceTypeId');
-    print('DEBUG: status field = $status');
+    log('DEBUG: name field = $name');
+    log('DEBUG: description field = $description');
+    log('DEBUG: phone field = $phone');
+    log('DEBUG: location field = $location');
+    log('DEBUG: maintenance_type_id field = $maintenanceTypeId');
+    log('DEBUG: status field = $status');
 
     // Only include open_from if it has a value
     if (openFrom.isNotEmpty) {
       data['open_from'] = openFrom;
-      print('DEBUG: open_from field = $openFrom');
+      log('DEBUG: open_from field = $openFrom');
     } else {
-      print('DEBUG: open_from field = EXCLUDED (empty)');
+      log('DEBUG: open_from field = EXCLUDED (empty)');
     }
 
     // Only include open_to if it has a value
     if (openTo.isNotEmpty) {
       data['open_to'] = openTo;
-      print('DEBUG: open_to field = $openTo');
+      log('DEBUG: open_to field = $openTo');
     } else {
-      print('DEBUG: open_to field = EXCLUDED (empty)');
+      log('DEBUG: open_to field = EXCLUDED (empty)');
     }
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
-      print('DEBUG: ar_name field = $arName');
+      log('DEBUG: ar_name field = $arName');
     } else {
-      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
-      print('DEBUG: ar_description field = $arDescription');
+      log('DEBUG: ar_description field = $arDescription');
     } else {
-      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (villageId != null && villageId! > 0) {
       data['village_id'] = villageId;
-      print('DEBUG: village_id field = $villageId');
+      log('DEBUG: village_id field = $villageId');
     } else {
-      print('DEBUG: village_id field = EXCLUDED (null or 0)');
+      log('DEBUG: village_id field = EXCLUDED (null or 0)');
     }
 
     // Add location map handling
     data['location_map'] = locationMap?.isNotEmpty == true
         ? locationMap!
         : 'https://maps.google.com/maps?q=24.7136,46.6753'; // Default to Riyadh
-    print('DEBUG: location_map field = ${data['location_map']}');
+    log('DEBUG: location_map field = ${data['location_map']}');
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print('DEBUG: image field = EXCLUDED (no image)');
+      log('DEBUG: image field = EXCLUDED (no image)');
     }
 
-    print('DEBUG: MaintenanceProvider ADD - Final API data:');
+    log('DEBUG: MaintenanceProvider ADD - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END MAINTENANCE PROVIDER ADD API DATA ===');
+    log('=== END MAINTENANCE PROVIDER ADD API DATA ===');
 
     return data;
   }
 }
 
 void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
-  print('DEBUG: showAddDialog called for item type: ${item.runtimeType}');
-  print('DEBUG: cubit type: ${cubit.runtimeType}');
+  log('DEBUG: showAddDialog called for item type: ${item.runtimeType}');
+  log('DEBUG: cubit type: ${cubit.runtimeType}');
 
   // Get screen dimensions for responsive design
   final screenSize = MediaQuery.of(context).size;
@@ -748,7 +739,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
   } else if (item is MallModel) {
     entityType = 'Mall';
   } else {
-    print('ERROR: Unhandled item type for add dialog: ${item.runtimeType}');
+    log('ERROR: Unhandled item type for add dialog: ${item.runtimeType}');
     return; // Don't show dialog for unknown type
   }
 
@@ -762,9 +753,6 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController openFromController = TextEditingController();
   final TextEditingController openToController = TextEditingController();
-  final TextEditingController zoneIdController = TextEditingController();
-  final TextEditingController villageIdController = TextEditingController();
-  final TextEditingController serviceIdController = TextEditingController();
 
   // Status and other selections
   num selectedStatus = 1; // Default to active
@@ -1107,7 +1095,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                               fontSize: labelFontSize),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (value) {
                                     setState(() {
@@ -1149,7 +1137,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                               fontSize: labelFontSize),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (value) {
                                     setState(() {
@@ -1236,7 +1224,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                                               fontSize: labelFontSize),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (value) {
                                     setState(() {
@@ -1340,8 +1328,7 @@ void showAddDialog(BuildContext context, dynamic item, dynamic cubit) {
                           bool isValid = true;
                           String errorMessage = '';
 
-                          if (nameController.text.trim().isEmpty ||
-                              selectedStatus == null) {
+                          if (nameController.text.trim().isEmpty) {
                             isValid = false;
                             errorMessage = 'Please fill in all required fields';
                           }
@@ -1707,7 +1694,7 @@ Widget _buildResponsiveImageUpload({
           ),
           subtitle: imagePath != null
               ? Text(
-                  imagePath!.split('/').last,
+                  imagePath.split('/').last,
                   style: TextStyle(fontSize: fontSize * 0.8),
                 )
               : Text(
@@ -1752,7 +1739,7 @@ Widget _buildResponsiveImageUpload({
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.file(
-                File(imagePath!),
+                File(imagePath),
                 fit: BoxFit.cover,
               ),
             ),

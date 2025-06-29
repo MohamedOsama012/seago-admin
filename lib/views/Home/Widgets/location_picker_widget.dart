@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,11 +11,11 @@ class LocationPickerWidget extends StatefulWidget {
   final Function(String address, String coordinates) onLocationSelected;
 
   const LocationPickerWidget({
-    Key? key,
+    super.key,
     this.initialLocation,
     this.initialLocationMap,
     required this.onLocationSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<LocationPickerWidget> createState() => _LocationPickerWidgetState();
@@ -65,7 +67,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
           }
         }
       } catch (e) {
-        print('Error parsing initial location data: $e');
+        log('Error parsing initial location data: $e');
       }
     }
 
@@ -110,7 +112,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
         CameraUpdate.newLatLng(_selectedPosition),
       );
     } catch (e) {
-      print('Error getting current location: $e');
+      log('Error getting current location: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -160,7 +162,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
         ].where((element) => element != null && element.isNotEmpty).join(', ');
       }
     } catch (e) {
-      print('Error getting address: $e');
+      log('Error getting address: $e');
       _selectedAddress = '${position.latitude}, ${position.longitude}';
     }
   }
@@ -197,8 +199,6 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () {
-              final coordinates =
-                  '${_selectedPosition.latitude}, ${_selectedPosition.longitude}';
               final googleMapsLink =
                   'https://maps.google.com/maps?q=${_selectedPosition.latitude},${_selectedPosition.longitude}';
               widget.onLocationSelected(_selectedAddress, googleMapsLink);

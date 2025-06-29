@@ -31,7 +31,7 @@ Future<String?> _pickImage() async {
     );
     return image?.path;
   } catch (e) {
-    print('Error picking image: $e');
+    log('Error picking image: $e');
     return null;
   }
 }
@@ -39,31 +39,31 @@ Future<String?> _pickImage() async {
 // Helper function to convert image file to base64 string
 Future<String?> _convertImageToBase64(String imagePath) async {
   try {
-    print('DEBUG: Starting base64 conversion for: $imagePath');
+    log('DEBUG: Starting base64 conversion for: $imagePath');
     File imageFile = File(imagePath);
-    print('DEBUG: File object created');
+    log('DEBUG: File object created');
 
     bool exists = await imageFile.exists();
-    print('DEBUG: File exists: $exists');
+    log('DEBUG: File exists: $exists');
 
     if (exists) {
-      print('DEBUG: Reading file bytes...');
+      log('DEBUG: Reading file bytes...');
       Uint8List imageBytes = await imageFile.readAsBytes();
-      print('DEBUG: File bytes read, length: ${imageBytes.length}');
+      log('DEBUG: File bytes read, length: ${imageBytes.length}');
 
       String base64String = base64Encode(imageBytes);
-      print('DEBUG: Base64 encoded, length: ${base64String.length}');
+      log('DEBUG: Base64 encoded, length: ${base64String.length}');
       final formattedBase64 = _ensureDataUrlPrefix(base64String);
-      print('DEBUG: Full base64 string with prefix: $formattedBase64');
+      log('DEBUG: Full base64 string with prefix: $formattedBase64');
 
       return formattedBase64;
     } else {
-      print('ERROR: Image file does not exist: $imagePath');
+      log('ERROR: Image file does not exist: $imagePath');
       return null;
     }
   } catch (e) {
-    print('ERROR: Converting image to base64: $e');
-    print('ERROR: Stack trace: ${StackTrace.current}');
+    log('ERROR: Converting image to base64: $e');
+    log('ERROR: Stack trace: ${StackTrace.current}');
     return null;
   }
 }
@@ -274,12 +274,12 @@ class ExpandableCard<T extends ExpandableItem> extends StatelessWidget {
               height: buttonHeight,
               child: ElevatedButton(
                 onPressed: () {
-                  print('DEBUG: Edit button pressed for ${item.name}');
-                  print('DEBUG: onEdit callback = $onEdit');
+                  log('DEBUG: Edit button pressed for ${item.name}');
+                  log('DEBUG: onEdit callback = $onEdit');
                   if (onEdit != null) {
                     onEdit!(item);
                   } else {
-                    print('DEBUG: onEdit is null!');
+                    log('DEBUG: onEdit is null!');
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -538,7 +538,7 @@ extension MallExpandableItem on MallModel {
   Map<String, String> get allDetails => {
         'Zone:': zone.name,
         'Description:': description,
-        'AR Description:': arDescription ?? 'N/A',
+        'AR Description:': arDescription,
         'Open From:': openFrom,
         'Open To:': openTo,
         'Status:': status == 1 ? 'Active' : 'Inactive',
@@ -791,9 +791,9 @@ void showVillageEditDialog(
               ElevatedButton(
                 onPressed: () async {
                   // Validate required fields
-                  if (nameController.text?.trim().isEmpty != false ||
-                      locationController.text?.trim().isEmpty != false ||
-                      descriptionController.text?.trim().isEmpty != false ||
+                  if (nameController.text.trim().isEmpty != false ||
+                      locationController.text.trim().isEmpty != false ||
+                      descriptionController.text.trim().isEmpty != false ||
                       selectedZoneId == 0 ||
                       selectedStatus == null) {
                     showErrorToast(
@@ -808,16 +808,14 @@ void showVillageEditDialog(
                       VillageEditModel editModel =
                           await VillageEditModel.fromFormData(
                         villageId: village.id ?? 0,
-                        name: nameController.text?.trim() ?? '',
-                        location: locationController.text?.trim() ?? '',
-                        description: descriptionController.text?.trim() ?? '',
-                        arName: arNameController.text?.trim() ?? '',
-                        arDescription:
-                            arDescriptionController.text?.trim() ?? '',
-                        zoneId:
-                            int.tryParse(zoneIdController.text?.trim() ?? '') ??
-                                village.zoneId?.toInt() ??
-                                0,
+                        name: nameController.text.trim(),
+                        location: locationController.text.trim(),
+                        description: descriptionController.text.trim(),
+                        arName: arNameController.text.trim(),
+                        arDescription: arDescriptionController.text.trim(),
+                        zoneId: int.tryParse(zoneIdController.text.trim()) ??
+                            village.zoneId?.toInt() ??
+                            0,
                         status: selectedStatus?.toInt() ??
                             village.status?.toInt() ??
                             0,
@@ -894,26 +892,25 @@ class MallEditModel {
   }) async {
     String? imageBase64;
     if (imagePath != null && imagePath.isNotEmpty) {
-      print('DEBUG: Converting image to base64 from path: $imagePath');
-      print('DEBUG: File path exists check: ${await File(imagePath).exists()}');
+      log('DEBUG: Converting image to base64 from path: $imagePath');
+      log('DEBUG: File path exists check: ${await File(imagePath).exists()}');
       imageBase64 = await _convertImageToBase64(imagePath);
-      print(
-          'DEBUG: Base64 conversion result - length: ${imageBase64?.length ?? 0}');
+      log('DEBUG: Base64 conversion result - length: ${imageBase64?.length ?? 0}');
       if (imageBase64 != null) {
-        print('DEBUG: Base64 conversion SUCCESS - will be included in API');
+        log('DEBUG: Base64 conversion SUCCESS - will be included in API');
       } else {
-        print('DEBUG: Base64 conversion FAILED - null result');
+        log('DEBUG: Base64 conversion FAILED - null result');
       }
     } else {
-      print('DEBUG: No image path provided - imagePath: $imagePath');
+      log('DEBUG: No image path provided - imagePath: $imagePath');
     }
 
     return MallEditModel(
       mallId: mallId,
-      name: name?.trim() ?? '',
-      description: description?.trim() ?? '',
-      openFrom: openFrom?.trim() ?? '',
-      openTo: openTo?.trim() ?? '',
+      name: name.trim(),
+      description: description.trim(),
+      openFrom: openFrom.trim(),
+      openTo: openTo.trim(),
       zoneId: zoneId,
       status: status,
       arName: arName?.trim().isNotEmpty == true ? arName!.trim() : null,
@@ -932,16 +929,16 @@ class MallEditModel {
         openTo != original.openTo ||
         zoneId != original.zoneId ||
         status != original.status ||
-        (arName ?? '') != (original.arName ?? '') ||
-        (arDescription ?? '') != (original.arDescription ?? '') ||
+        (arName ?? '') != (original.arName) ||
+        (arDescription ?? '') != (original.arDescription) ||
         imageBase64 != null;
   }
 
   // Get the complete data for API request
   Map<String, dynamic> toApiData() {
-    print('=== MALL EDIT API DATA ===');
-    print('DEBUG: MallEditModel.toApiData() started');
-    print('DEBUG: mallId (for URL): $mallId');
+    log('=== MALL EDIT API DATA ===');
+    log('DEBUG: MallEditModel.toApiData() started');
+    log('DEBUG: mallId (for URL): $mallId');
 
     Map<String, dynamic> data = {
       'name': name,
@@ -952,48 +949,45 @@ class MallEditModel {
       'status': status,
     };
 
-    print('DEBUG: name field = ${data['name']}');
-    print('DEBUG: description field = ${data['description']}');
-    print('DEBUG: open_from field = ${data['open_from']}');
-    print('DEBUG: open_to field = ${data['open_to']}');
-    print('DEBUG: zone_id field = ${data['zone_id']}');
-    print('DEBUG: status field = ${data['status']}');
+    log('DEBUG: name field = ${data['name']}');
+    log('DEBUG: description field = ${data['description']}');
+    log('DEBUG: open_from field = ${data['open_from']}');
+    log('DEBUG: open_to field = ${data['open_to']}');
+    log('DEBUG: zone_id field = ${data['zone_id']}');
+    log('DEBUG: status field = ${data['status']}');
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
-      print('DEBUG: ar_name field = ${data['ar_name']}');
+      log('DEBUG: ar_name field = ${data['ar_name']}');
     } else {
-      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
-      print('DEBUG: ar_description field = ${data['ar_description']}');
+      log('DEBUG: ar_description field = ${data['ar_description']}');
     } else {
-      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: Mall - Adding base64 image to API data - length: ${imageBase64!.length}');
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: Mall - Adding base64 image to API data - length: ${imageBase64!.length}');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print('DEBUG: Mall - No image data to send to API');
-      print('DEBUG: image field = EXCLUDED (no image)');
+      log('DEBUG: Mall - No image data to send to API');
+      log('DEBUG: image field = EXCLUDED (no image)');
     }
 
-    print('DEBUG: Mall - Final API data:');
+    log('DEBUG: Mall - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END MALL EDIT API DATA ===');
+    log('=== END MALL EDIT API DATA ===');
 
     return data;
   }
@@ -1041,9 +1035,9 @@ class VillageEditModel {
 
     return VillageEditModel(
       villageId: villageId,
-      name: name?.trim() ?? '',
-      location: location?.trim() ?? '',
-      description: description?.trim() ?? '',
+      name: name.trim(),
+      location: location.trim(),
+      description: description.trim(),
       arName: arName?.trim().isNotEmpty == true ? arName!.trim() : null,
       arDescription: arDescription?.trim().isNotEmpty == true
           ? arDescription!.trim()
@@ -1055,9 +1049,9 @@ class VillageEditModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== VILLAGE EDIT API DATA ===');
-    print('DEBUG: VillageEditModel.toApiData() started');
-    print('DEBUG: villageId (for URL): $villageId');
+    log('=== VILLAGE EDIT API DATA ===');
+    log('DEBUG: VillageEditModel.toApiData() started');
+    log('DEBUG: villageId (for URL): $villageId');
 
     Map<String, dynamic> data = {
       'name': name,
@@ -1067,47 +1061,44 @@ class VillageEditModel {
       'status': status,
     };
 
-    print('DEBUG: name field = ${data['name']}');
-    print('DEBUG: location field = ${data['location']}');
-    print('DEBUG: description field = ${data['description']}');
-    print('DEBUG: zone_id field = ${data['zone_id']}');
-    print('DEBUG: status field = ${data['status']}');
+    log('DEBUG: name field = ${data['name']}');
+    log('DEBUG: location field = ${data['location']}');
+    log('DEBUG: description field = ${data['description']}');
+    log('DEBUG: zone_id field = ${data['zone_id']}');
+    log('DEBUG: status field = ${data['status']}');
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
-      print('DEBUG: ar_name field = ${data['ar_name']}');
+      log('DEBUG: ar_name field = ${data['ar_name']}');
     } else {
-      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
-      print('DEBUG: ar_description field = ${data['ar_description']}');
+      log('DEBUG: ar_description field = ${data['ar_description']}');
     } else {
-      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: Village - Adding base64 image to API data - length: ${imageBase64!.length}');
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: Village - Adding base64 image to API data - length: ${imageBase64!.length}');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print('DEBUG: Village - No image data to send to API');
-      print('DEBUG: image field = EXCLUDED (no image)');
+      log('DEBUG: Village - No image data to send to API');
+      log('DEBUG: image field = EXCLUDED (no image)');
     }
 
-    print('DEBUG: Village - Final API data:');
+    log('DEBUG: Village - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END VILLAGE EDIT API DATA ===');
+    log('=== END VILLAGE EDIT API DATA ===');
 
     return data;
   }
@@ -1174,9 +1165,9 @@ class ServiceProviderEditModel {
     return ServiceProviderEditModel(
       serviceProviderId: serviceProviderId,
       serviceId: serviceId,
-      name: name?.trim() ?? '',
-      description: description?.trim() ?? '',
-      phone: phone?.trim() ?? '',
+      name: name.trim(),
+      description: description.trim(),
+      phone: phone.trim(),
       status: status,
       location: location?.trim(),
       arName: arName?.trim().isNotEmpty == true ? arName!.trim() : null,
@@ -1193,10 +1184,10 @@ class ServiceProviderEditModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== SERVICE PROVIDER EDIT API DATA ===');
-    print('DEBUG: ServiceProviderEditModel.toApiData() started');
-    print('DEBUG: serviceProviderId (for URL): $serviceProviderId');
-    print('DEBUG: serviceId (in body): $serviceId');
+    log('=== SERVICE PROVIDER EDIT API DATA ===');
+    log('DEBUG: ServiceProviderEditModel.toApiData() started');
+    log('DEBUG: serviceProviderId (for URL): $serviceProviderId');
+    log('DEBUG: serviceId (in body): $serviceId');
 
     Map<String, dynamic> data = {
       'service_id':
@@ -1209,71 +1200,67 @@ class ServiceProviderEditModel {
 
     // Always include location (required field)
     data['location'] = location?.isNotEmpty == true ? location! : '';
-    print('DEBUG: location field = ${data['location']}');
+    log('DEBUG: location field = ${data['location']}');
 
     // Always include ar_name (even if empty)
     data['ar_name'] = arName?.isNotEmpty == true ? arName! : '';
-    print('DEBUG: ar_name field = ${data['ar_name']}');
+    log('DEBUG: ar_name field = ${data['ar_name']}');
 
     // Always include ar_description (even if empty)
     data['ar_description'] =
         arDescription?.isNotEmpty == true ? arDescription! : '';
-    print('DEBUG: ar_description field = ${data['ar_description']}');
+    log('DEBUG: ar_description field = ${data['ar_description']}');
 
     // Always include open_from (even if empty)
     data['open_from'] = openFrom?.isNotEmpty == true ? openFrom! : '';
-    print('DEBUG: open_from field = ${data['open_from']}');
+    log('DEBUG: open_from field = ${data['open_from']}');
 
     // Always include open_to (even if empty)
     data['open_to'] = openTo?.isNotEmpty == true ? openTo! : '';
-    print('DEBUG: open_to field = ${data['open_to']}');
+    log('DEBUG: open_to field = ${data['open_to']}');
 
     // Include village_id only if it has a valid value
     if (villageId != null && villageId! > 0) {
       data['village_id'] = villageId;
-      print('DEBUG: village_id field = ${data['village_id']}');
+      log('DEBUG: village_id field = ${data['village_id']}');
     } else {
-      print('DEBUG: village_id field = EXCLUDED (null or 0)');
+      log('DEBUG: village_id field = EXCLUDED (null or 0)');
     }
 
     // Include zone_id only if it has a valid value
     if (zoneId != null && zoneId! > 0) {
       data['zone_id'] = zoneId;
-      print('DEBUG: zone_id field = ${data['zone_id']}');
+      log('DEBUG: zone_id field = ${data['zone_id']}');
     } else {
-      print('DEBUG: zone_id field = EXCLUDED (null or 0)');
+      log('DEBUG: zone_id field = EXCLUDED (null or 0)');
     }
 
     // Always provide location_map (temporary until backend handles automatically)
     data['location_map'] = locationMap?.isNotEmpty == true
         ? locationMap!
         : 'https://maps.google.com/maps?q=24.7136,46.6753'; // Default to Riyadh
-    print('DEBUG: location_map field = ${data['location_map']}');
+    log('DEBUG: location_map field = ${data['location_map']}');
 
     // Image handling: Only include the image if a new one was selected.
     // Otherwise, the backend will keep the existing image.
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: ServiceProvider - Adding selected base64 image to API data - length: ${imageBase64!.length}');
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: ServiceProvider - Adding selected base64 image to API data - length: ${imageBase64!.length}');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print(
-          'DEBUG: ServiceProvider - No new image selected. Existing image will be preserved on the server.');
-      print('DEBUG: image field = EXCLUDED (no new image)');
+      log('DEBUG: ServiceProvider - No new image selected. Existing image will be preserved on the server.');
+      log('DEBUG: image field = EXCLUDED (no new image)');
     }
 
-    print('DEBUG: ServiceProvider - Final API data:');
+    log('DEBUG: ServiceProvider - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END SERVICE PROVIDER EDIT API DATA ===');
+    log('=== END SERVICE PROVIDER EDIT API DATA ===');
 
     return data;
   }
@@ -1336,12 +1323,12 @@ class MaintenanceProviderEditModel {
 
     return MaintenanceProviderEditModel(
       maintenanceProviderId: maintenanceProviderId,
-      name: name?.trim() ?? '',
-      description: description?.trim() ?? '',
-      phone: phone?.trim() ?? '',
-      location: location?.trim() ?? '',
-      openFrom: openFrom?.trim() ?? '',
-      openTo: openTo?.trim() ?? '',
+      name: name.trim(),
+      description: description.trim(),
+      phone: phone.trim(),
+      location: location.trim(),
+      openFrom: openFrom.trim(),
+      openTo: openTo.trim(),
       maintenanceTypeId: maintenanceTypeId,
       status: status,
       arName: arName?.trim().isNotEmpty == true ? arName!.trim() : null,
@@ -1355,11 +1342,11 @@ class MaintenanceProviderEditModel {
   }
 
   Map<String, dynamic> toApiData() {
-    print('=== MAINTENANCE PROVIDER EDIT API DATA ===');
-    print('DEBUG: MaintenanceProviderEditModel.toApiData() started');
-    print('DEBUG: maintenanceProviderId (for URL): $maintenanceProviderId');
-    print('DEBUG: maintenanceTypeId (in body): $maintenanceTypeId');
-    print('DEBUG: villageId (in body): $villageId');
+    log('=== MAINTENANCE PROVIDER EDIT API DATA ===');
+    log('DEBUG: MaintenanceProviderEditModel.toApiData() started');
+    log('DEBUG: maintenanceProviderId (for URL): $maintenanceProviderId');
+    log('DEBUG: maintenanceTypeId (in body): $maintenanceTypeId');
+    log('DEBUG: villageId (in body): $villageId');
 
     Map<String, dynamic> data = {
       'name': name,
@@ -1372,74 +1359,70 @@ class MaintenanceProviderEditModel {
       'status': status,
     };
 
-    print('DEBUG: name field = ${data['name']}');
-    print('DEBUG: description field = ${data['description']}');
-    print('DEBUG: phone field = ${data['phone']}');
-    print('DEBUG: location field = ${data['location']}');
-    print('DEBUG: open_from field = ${data['open_from']}');
-    print('DEBUG: open_to field = ${data['open_to']}');
-    print('DEBUG: maintenance_type_id field = ${data['maintenance_type_id']}');
-    print('DEBUG: status field = ${data['status']}');
+    log('DEBUG: name field = ${data['name']}');
+    log('DEBUG: description field = ${data['description']}');
+    log('DEBUG: phone field = ${data['phone']}');
+    log('DEBUG: location field = ${data['location']}');
+    log('DEBUG: open_from field = ${data['open_from']}');
+    log('DEBUG: open_to field = ${data['open_to']}');
+    log('DEBUG: maintenance_type_id field = ${data['maintenance_type_id']}');
+    log('DEBUG: status field = ${data['status']}');
 
     if (arName != null && arName!.isNotEmpty) {
       data['ar_name'] = arName;
-      print('DEBUG: ar_name field = ${data['ar_name']}');
+      log('DEBUG: ar_name field = ${data['ar_name']}');
     } else {
-      print('DEBUG: ar_name field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_name field = EXCLUDED (empty or null)');
     }
 
     if (arDescription != null && arDescription!.isNotEmpty) {
       data['ar_description'] = arDescription;
-      print('DEBUG: ar_description field = ${data['ar_description']}');
+      log('DEBUG: ar_description field = ${data['ar_description']}');
     } else {
-      print('DEBUG: ar_description field = EXCLUDED (empty or null)');
+      log('DEBUG: ar_description field = EXCLUDED (empty or null)');
     }
 
     if (villageId != null) {
       data['village_id'] = villageId;
-      print('DEBUG: village_id field = ${data['village_id']}');
+      log('DEBUG: village_id field = ${data['village_id']}');
     } else {
-      print('DEBUG: village_id field = EXCLUDED (null)');
+      log('DEBUG: village_id field = EXCLUDED (null)');
     }
 
     // Add location map handling
     data['location_map'] = locationMap?.isNotEmpty == true
         ? locationMap!
         : 'https://maps.google.com/maps?q=24.7136,46.6753'; // Default to Riyadh
-    print('DEBUG: location_map field = ${data['location_map']}');
+    log('DEBUG: location_map field = ${data['location_map']}');
 
     // Image handling: Only include the image if a new one was selected
     if (imageBase64 != null && imageBase64!.isNotEmpty) {
       data['image'] = _ensureDataUrlPrefix(imageBase64!);
-      print(
-          'DEBUG: MaintenanceProvider - Adding selected base64 image to API data - length: ${imageBase64!.length}');
-      print(
-          'DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
+      log('DEBUG: MaintenanceProvider - Adding selected base64 image to API data - length: ${imageBase64!.length}');
+      log('DEBUG: image field = INCLUDED (${imageBase64!.length} characters)');
     } else {
-      print(
-          'DEBUG: MaintenanceProvider - No new image selected. Existing image will be preserved on the server.');
-      print('DEBUG: image field = EXCLUDED (no new image)');
+      log('DEBUG: MaintenanceProvider - No new image selected. Existing image will be preserved on the server.');
+      log('DEBUG: image field = EXCLUDED (no new image)');
     }
 
-    print('DEBUG: MaintenanceProvider - Final API data:');
+    log('DEBUG: MaintenanceProvider - Final API data:');
     data.forEach((key, value) {
       if (key == 'image') {
-        print(
-            '  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
+        log('  $key: [BASE64_IMAGE_DATA] (${value.toString().length} chars) (${value.runtimeType})');
       } else {
-        print('  $key: $value (${value.runtimeType})');
+        log('  $key: $value (${value.runtimeType})');
       }
     });
-    print('=== END MAINTENANCE PROVIDER EDIT API DATA ===');
+    log('=== END MAINTENANCE PROVIDER EDIT API DATA ===');
 
     return data;
   }
 }
 
 void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
-  print('DEBUG: showEditDialog called with item type: ${item.runtimeType}');
-  print('DEBUG: item.name: ${item.name}');
-  print('DEBUG: cubit type: ${cubit.runtimeType}');
+  log('DEBUG: showEditDialog called with item type: ${item.runtimeType}');
+  log('DEBUG: item.name: ${item.name}');
+  log('DEBUG: cubit type: ${cubit.runtimeType}');
 
   // Determine entity type
   String entityType = '';
@@ -1453,26 +1436,26 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
     entityType = 'Mall';
   }
 
-  print('DEBUG: Determined entityType: $entityType');
+  log('DEBUG: Determined entityType: $entityType');
 
   // Initialize controllers with item data
-  print('DEBUG: Initializing controllers...');
+  log('DEBUG: Initializing controllers...');
 
   final TextEditingController nameController =
       TextEditingController(text: item.name ?? '');
-  print('DEBUG: nameController initialized');
+  log('DEBUG: nameController initialized');
 
   final TextEditingController arNameController =
       TextEditingController(text: item.arName ?? '');
-  print('DEBUG: arNameController initialized');
+  log('DEBUG: arNameController initialized');
 
   final TextEditingController descriptionController =
       TextEditingController(text: item.description ?? '');
-  print('DEBUG: descriptionController initialized');
+  log('DEBUG: descriptionController initialized');
 
   final TextEditingController arDescriptionController =
       TextEditingController(text: item.arDescription ?? '');
-  print('DEBUG: arDescriptionController initialized');
+  log('DEBUG: arDescriptionController initialized');
 
   final TextEditingController locationController = TextEditingController(
       text: (item is Villages ||
@@ -1480,7 +1463,7 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
               item is Providers)
           ? item.location ?? ''
           : '');
-  print('DEBUG: locationController initialized');
+  log('DEBUG: locationController initialized');
 
   // Location map controller for coordinates
   final TextEditingController locationMapController = TextEditingController(
@@ -1489,14 +1472,14 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
           : (item is Providers)
               ? item.locationMap ?? ''
               : '');
-  print('DEBUG: locationMapController initialized');
+  log('DEBUG: locationMapController initialized');
 
   // Entity-specific controllers
   final TextEditingController phoneController = TextEditingController(
       text: (item is ServiceProviderModel || item is Providers)
           ? (item is ServiceProviderModel ? item.phone : item.phone)
           : '');
-  print('DEBUG: phoneController initialized');
+  log('DEBUG: phoneController initialized');
 
   final TextEditingController openFromController = TextEditingController(
       text: (item is ServiceProviderModel ||
@@ -1504,7 +1487,7 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
               item is MallModel)
           ? item.openFrom ?? ''
           : '');
-  print('DEBUG: openFromController initialized');
+  log('DEBUG: openFromController initialized');
 
   final TextEditingController openToController = TextEditingController(
       text: (item is ServiceProviderModel ||
@@ -1512,45 +1495,31 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
               item is MallModel)
           ? item.openTo ?? ''
           : '');
-  print('DEBUG: openToController initialized');
+  log('DEBUG: openToController initialized');
 
   // Entity-specific controllers
-  final TextEditingController zoneIdController = TextEditingController(
-      text: (item is Villages ||
-              item is MallModel ||
-              item is ServiceProviderModel)
-          ? (item.zoneId?.toString() ?? '')
-          : '');
-  print('DEBUG: zoneIdController initialized');
+  log('DEBUG: zoneIdController initialized');
 
-  final TextEditingController villageIdController = TextEditingController(
-      text: (item is ServiceProviderModel || item is Providers)
-          ? (item.villageId?.toString() ?? '')
-          : '');
-  print('DEBUG: villageIdController initialized');
+  log('DEBUG: villageIdController initialized');
 
-  final TextEditingController serviceIdController = TextEditingController(
-      text: item is ServiceProviderModel
-          ? (item.serviceId?.toString() ?? '')
-          : '');
-  print('DEBUG: serviceIdController initialized');
+  log('DEBUG: serviceIdController initialized');
 
   // Status handling
-  print('DEBUG: Handling status...');
+  log('DEBUG: Handling status...');
   num? selectedStatus;
   if (item is Villages || item is ServiceProviderModel || item is MallModel) {
     selectedStatus = item.status;
   } else if (item is Providers) {
     selectedStatus = item.status;
   }
-  print('DEBUG: selectedStatus = $selectedStatus');
+  log('DEBUG: selectedStatus = $selectedStatus');
 
   // Maintenance type handling for maintenance providers
   int? selectedMaintenanceTypeId;
   if (item is Providers) {
     selectedMaintenanceTypeId = item.maintenanceTypeId?.toInt();
   }
-  print('DEBUG: selectedMaintenanceTypeId = $selectedMaintenanceTypeId');
+  log('DEBUG: selectedMaintenanceTypeId = $selectedMaintenanceTypeId');
 
   // Dropdown state variables
   int? selectedVillageId;
@@ -1567,11 +1536,11 @@ void showEditDialog(BuildContext context, dynamic item, dynamic cubit) {
   } else if (item is Providers) {
     selectedVillageId = item.villageId?.toInt();
   } else if (item is MallModel) {
-    selectedZoneId = item.zoneId?.toInt();
+    selectedZoneId = item.zoneId.toInt();
   }
 
   String? imagePath;
-  print('DEBUG: All controllers and variables initialized successfully');
+  log('DEBUG: All controllers and variables initialized successfully');
 
   // Get screen dimensions for responsive design
   final screenSize = MediaQuery.of(context).size;
@@ -2737,7 +2706,7 @@ Widget _buildResponsiveImageUpload({
           ),
           subtitle: imagePath != null
               ? Text(
-                  imagePath!.split('/').last,
+                  imagePath.split('/').last,
                   style: TextStyle(fontSize: fontSize * 0.8),
                 )
               : Text(
@@ -2782,7 +2751,7 @@ Widget _buildResponsiveImageUpload({
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.file(
-                File(imagePath!),
+                File(imagePath),
                 fit: BoxFit.cover,
               ),
             ),

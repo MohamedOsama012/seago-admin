@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
 import 'package:sa7el/Cubit/authentication/auth_cubit.dart';
 import 'package:sa7el/Cubit/bloc_observer.dart';

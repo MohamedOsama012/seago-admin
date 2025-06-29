@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -96,7 +95,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       return;
   //     }
 
-  //     print("Zone ID retrieved: $zoneId");
+  //     log("Zone ID retrieved: $zoneId");
 
   //     // Format time properly
   //     String formatTo24Hr(String time) {
@@ -127,14 +126,14 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //             final dateTime = inputFormat.parse(cleanedTime);
   //             return DateFormat("HH:mm:ss").format(dateTime);
   //           } catch (e) {
-  //             print("AM/PM parsing error: $e");
+  //             log("AM/PM parsing error: $e");
   //           }
   //         }
 
   //         // Fallback: assume it's a valid time string
   //         return cleanedTime;
   //       } catch (e) {
-  //         print("Time formatting error for '$time': $e");
+  //         log("Time formatting error for '$time': $e");
   //         return "$time:00"; // Basic fallback
   //       }
   //     }
@@ -164,7 +163,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       data["ar_description"] = arDescription.trim();
   //     }
 
-  //     print("Sending mall data: $data");
+  //     log("Sending mall data: $data");
 
   //     // Send request using FormData for better compatibility
   //     FormData formData = FormData();
@@ -178,8 +177,8 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       token: token,
   //     );
 
-  //     print("Response status: ${mallResponse.statusCode}");
-  //     print("Response data: ${mallResponse.data}");
+  //     log("Response status: ${mallResponse.statusCode}");
+  //     log("Response data: ${mallResponse.data}");
 
   //     if (mallResponse.statusCode == 200 || mallResponse.statusCode == 201) {
   //       emit(MallsAddSuccessState("Mall added successfully"));
@@ -190,7 +189,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       emit(MallsAddFailedState(errorMessage));
   //     }
   //   } catch (error) {
-  //     print("Add mall error: $error");
+  //     log("Add mall error: $error");
   //     emit(MallsAddFailedState(_handleError(error)));
   //   }
   // }
@@ -223,7 +222,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
 
   // Future<int?> _createOrGetZoneId(String zoneName) async {
   //   try {
-  //     print("Getting/creating zone: $zoneName");
+  //     log("Getting/creating zone: $zoneName");
 
   //     // First, try to get existing zones
   //     final getZonesResponse = await DioHelper.getData(
@@ -231,8 +230,8 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       token: token,
   //     );
 
-  //     print("Get zones response: ${getZonesResponse.statusCode}");
-  //     print("Get zones data: ${getZonesResponse.data}");
+  //     log("Get zones response: ${getZonesResponse.statusCode}");
+  //     log("Get zones data: ${getZonesResponse.data}");
 
   //     if (getZonesResponse.statusCode == 200 && getZonesResponse.data != null) {
   //       // Try different possible response structures
@@ -248,7 +247,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //         zones = getZonesResponse.data;
   //       }
 
-  //       print("Found zones: $zones");
+  //       log("Found zones: $zones");
 
   //       // Look for existing zone
   //       for (var zone in zones) {
@@ -256,7 +255,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //           if (zone['name'].toString().toLowerCase().trim() ==
   //               zoneName.toLowerCase().trim()) {
   //             final id = zone['id'];
-  //             print("Found existing zone with ID: $id");
+  //             log("Found existing zone with ID: $id");
   //             return id is int ? id : int.tryParse(id.toString());
   //           }
   //         }
@@ -264,14 +263,14 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //     }
 
   //     // If zone doesn't exist, create it
-  //     print("Zone not found, creating new zone: $zoneName");
+  //     log("Zone not found, creating new zone: $zoneName");
 
   //     final createZoneData = {
   //       "name": zoneName.trim(),
   //       "status": 1,
   //     };
 
-  //     print("Creating zone with data: $createZoneData");
+  //     log("Creating zone with data: $createZoneData");
 
   //     final zoneResponse = await DioHelper.postData(
   //       url: WegoEndPoints.addZoneMallsEndPoint,
@@ -279,8 +278,8 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       token: token,
   //     );
 
-  //     print("Create zone response status: ${zoneResponse.statusCode}");
-  //     print("Create zone response data: ${zoneResponse.data}");
+  //     log("Create zone response status: ${zoneResponse.statusCode}");
+  //     log("Create zone response data: ${zoneResponse.data}");
 
   //     if ((zoneResponse.statusCode == 200 || zoneResponse.statusCode == 201)) {
   //       if (zoneResponse.data is Map<String, dynamic>) {
@@ -292,16 +291,16 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //             responseData['id'] ??
   //             responseData['data']?['zone']?['id'];
 
-  //         print("Created zone with ID: $id");
+  //         log("Created zone with ID: $id");
   //         return id is int ? id : int.tryParse(id.toString());
   //       }
   //     } else {
-  //       print("Failed to create zone. Response: ${zoneResponse.data}");
+  //       log("Failed to create zone. Response: ${zoneResponse.data}");
   //     }
   //   } catch (e) {
-  //     print("Error in _createOrGetZoneId: $e");
+  //     log("Error in _createOrGetZoneId: $e");
   //     if (e is DioException) {
-  //       print("DioException details: ${e.response?.data}");
+  //       log("DioException details: ${e.response?.data}");
   //     }
   //   }
   //   return null;
@@ -322,7 +321,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
 
     if (dioError.response != null) {
       final responseData = dioError.response?.data;
-      print("DioError response data: $responseData");
+      log("DioError response data: $responseData");
 
       if (responseData is Map<String, dynamic>) {
         // Handle validation errors specifically
@@ -449,7 +448,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
           final dateTime = inputFormat.parse(cleanedTime);
           return DateFormat("H:mm:ss").format(dateTime);
         } catch (e) {
-          print("Invalid time input: $time");
+          log("Invalid time input: $time");
           return "0:00:00"; // fallback
         }
       }
@@ -462,21 +461,21 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
         "open_to": formatTo24Hr(openTo)
       };
 
-      print("Sending mall data: $data");
-      print("${formatTo24Hr(openTo)}");
+      log("Sending mall data: $data");
+      log("${formatTo24Hr(openTo)}");
 
       final mallResponse = await DioHelper.postData(
         url: WegoEndPoints.addMallsEndPoint,
         data: data,
         token: token,
       );
-      print(data);
+      log(data.toString());
       if (mallResponse.statusCode == 200 || mallResponse.statusCode == 201) {
         emit(MallsAddSuccessState("Mall added successfully"));
         // حديث البيانات فورًا بعد الإضافة الناجحة
         await getData();
       } else {
-        print("Response: ${mallResponse.data}");
+        log("Response: ${mallResponse.data}");
         emit(MallsAddFailedState("Failed to add mall"));
       }
     } catch (error) {
@@ -524,7 +523,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
         return id is int ? id : int.tryParse(id.toString());
       }
     } catch (e) {
-      print("Error in _createOrGetZoneId: $e");
+      log("Error in _createOrGetZoneId: $e");
     }
     return null;
   }
@@ -542,7 +541,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
       // Refresh the malls list after successful deletion
       await getData();
     } catch (error) {
-      print('Delete Mall Error: ${error.toString()}');
+      log('Delete Mall Error: ${error.toString()}');
       emit(MallsDeleteFailedState(error.toString()));
     }
   }
@@ -636,7 +635,7 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
   //       emit(MallsEditFailedState("Failed to update mall"));
   //     }
   //   } catch (error) {
-  //     print('Edit Mall Error: ${error.toString()}');
+  //     log('Edit Mall Error: ${error.toString()}');
   //     emit(MallsEditFailedState(_handleError(error)));
   //   }
   // }
@@ -650,15 +649,13 @@ class MallsCubit extends EntityCubit<MallModel, MallsStates> {
       // Get all the data from the complete model (including base64 image if present)
       final allData = editModel.toApiData();
 
-      print('DEBUG: CUBIT - API data being sent: ${allData.keys.toList()}');
+      log('DEBUG: CUBIT - API data being sent: ${allData.keys.toList()}');
       if (allData.containsKey('image')) {
-        print(
-            'DEBUG: CUBIT - Image data included, length: ${allData['image']?.length ?? 0}');
+        log('DEBUG: CUBIT - Image data included, length: ${allData['image']?.length ?? 0}');
       } else {
-        print('DEBUG: CUBIT - No image data in API payload');
+        log('DEBUG: CUBIT - No image data in API payload');
       }
-      print(
-          'DEBUG: CUBIT - Full data (excluding image): ${Map.from(allData)..remove('image')}');
+      log('DEBUG: CUBIT - Full data (excluding image): ${Map.from(allData)..remove('image')}');
 
       final response = await DioHelper.postData(
         url: "${WegoEndPoints.updateMallsEndPoint}/${editModel.mallId}",

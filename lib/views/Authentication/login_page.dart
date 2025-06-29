@@ -4,7 +4,6 @@ import 'package:sa7el/Core/colors.dart';
 import 'package:sa7el/Cubit/authentication/auth_cubit.dart';
 import 'package:sa7el/Cubit/authentication/auth_state.dart';
 import 'package:sa7el/views/Authentication/widgets/custom_snackBar.dart';
-import 'package:sa7el/views/Authentication/widgets/custom_textFormField.dart';
 import 'package:sa7el/views/Home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -110,14 +109,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return "Password" + ' is required';
+                            return "Password is required";
                           }
                           // Add more email validation if needed
                           return null;
                         },
                       ),
                       SizedBox(height: height * 0.025),
-
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,

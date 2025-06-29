@@ -3,15 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sa7el/Core/colors.dart';
 import 'package:sa7el/Cubit/Village/village_cubit.dart';
 import 'package:sa7el/Cubit/Village/village_states.dart';
+import 'package:sa7el/Cubit/maintenance_providers/maintenance_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_cubit.dart';
 import 'package:sa7el/Cubit/service_provider/service_provider_states.dart';
-import 'package:sa7el/Cubit/maintenance_providers/maintenance_cubit.dart';
-import 'package:sa7el/Cubit/maintenance_providers/maintenance_state.dart';
-import 'package:sa7el/Cubit/malls/malls_cubit.dart';
-import 'package:sa7el/Cubit/malls/malls_states.dart';
-import 'package:sa7el/Model/village_model.dart' as village_model;
-import 'package:sa7el/Model/service_provider_model.dart';
 import 'package:sa7el/Model/maintenance_model.dart' as maintenance_model;
+import 'package:sa7el/Model/service_provider_model.dart';
+import 'package:sa7el/Model/village_model.dart' as village_model;
 
 class FilterState {
   final String searchQuery;

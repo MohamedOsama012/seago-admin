@@ -55,12 +55,6 @@ class MaintenanceCubit extends EntityCubit<Providers, MaintenanceStates> {
           .toList();
     }
 
-    MaintenanceModel filteredModel = MaintenanceModel(
-      providers: filteredProviders,
-      maintenanceTypes: maintenanceTypes,
-      villages: villages,
-    );
-
     emit(MaintenanceFilteredState(
         filteredProviders, maintenanceTypes, villages));
   }
@@ -74,12 +68,6 @@ class MaintenanceCubit extends EntityCubit<Providers, MaintenanceStates> {
           items.where((provider) => provider.villageId == villageId).toList();
     }
 
-    MaintenanceModel filteredModel = MaintenanceModel(
-      providers: filteredProviders,
-      maintenanceTypes: maintenanceTypes,
-      villages: villages,
-    );
-
     emit(MaintenanceFilteredState(
         filteredProviders, maintenanceTypes, villages));
   }
@@ -87,12 +75,6 @@ class MaintenanceCubit extends EntityCubit<Providers, MaintenanceStates> {
   ///clear filter
   void clearFilter() {
     filteredProviders = List.from(items);
-
-    MaintenanceModel resetModel = MaintenanceModel(
-      providers: filteredProviders,
-      maintenanceTypes: maintenanceTypes,
-      villages: villages,
-    );
 
     emit(
         MaintenanceSuccessState(filteredProviders, maintenanceTypes, villages));
@@ -114,12 +96,6 @@ class MaintenanceCubit extends EntityCubit<Providers, MaintenanceStates> {
             description.contains(searchLower);
       }).toList();
     }
-
-    MaintenanceModel searchModel = MaintenanceModel(
-      providers: filteredProviders,
-      maintenanceTypes: maintenanceTypes,
-      villages: villages,
-    );
 
     emit(MaintenanceSearchState(filteredProviders, maintenanceTypes, villages));
   }

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sa7el/Core/colors.dart';
@@ -159,7 +161,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
 
         // Add entity-specific search fields
         if (item is ServiceProviderModel) {
-          final phone = (item.phone ?? '').toLowerCase();
+          final phone = (item.phone).toLowerCase();
           final serviceName = (item.service?.name ?? '').toLowerCase();
           matchesSearch = matchesSearch ||
               phone.contains(query) ||
@@ -186,7 +188,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
         final itemZoneId = item is Villages
             ? item.zoneId?.toInt()
             : item is MallModel
-                ? item.zoneId?.toInt()
+                ? item.zoneId.toInt()
                 : item is ServiceProviderModel
                     ? item.zoneId?.toInt()
                     : null;
@@ -212,7 +214,9 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
       // Apply maintenance type filter
       if (_filterState.maintenanceTypeFilter != null && item is Providers) {
         if (item.maintenanceTypeId?.toInt() !=
-            _filterState.maintenanceTypeFilter) return false;
+            _filterState.maintenanceTypeFilter) {
+          return false;
+        }
       }
 
       return true;
@@ -480,8 +484,7 @@ class _EntityListScreenState<C extends EntityCubit<T, S>, T, S>
                       } else if (cubit is MaintenanceCubit) {
                         templateItem = Providers();
                       } else {
-                        print(
-                            'Error: Could not create a template for unhandled cubit type ${cubit.runtimeType}');
+                        log('Error: Could not create a template for unhandled cubit type ${cubit.runtimeType}');
                         // Optionally, show an error to the user
                         showErrorToast(
                             context, 'Cannot add item: Unhandled entity type.');
